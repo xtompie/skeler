@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Console;
+namespace App\Core\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Console\Commands\ModelMake;
+use App\Core\Console\Commands\ModelMake;
 
 class Kernel extends ConsoleKernel
 {
