@@ -1,13 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Admin\Resource\ResourceManager;
+
 
 Route::group(
     [
         'prefix' => 'admin',
-        // 'namespace' => 'App\\Admin\\Http\\Controllers',
     ],
     function () {
+
+        ResourceManager::each()->routeRegister();
 
         Route::get('test', App\Admin\Http\Controller\Test::class);
 

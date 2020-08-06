@@ -10,27 +10,27 @@ class Resource
 
     public function key()
     {
-        return Str::snake(Str::pluralStudly(class_basename($this)));
+        return Str::snake(class_basename($this));
     }
 
     public function modelClass()
     {
-        return null;
+        return "App\\Model\\" + class_basename($this);
     }
 
-    public function routeRegisters()
+    public function routeRegister()
     {
         Route::group([
             'prefix' => 'resource/' . $this->key(),
+            'resource' => $this->key(),
         ], function () {
-            Route::get('index', $this->controllerIndex()); /** @TOOD defaults resource => $this->key() */
-            /** @TODO create, detail, update, delete */
+            Route::get('', $this->controllerIndex());
         });
     }
 
     public function controllerIndex()
     {
-        return \Module\Admin\Http\Controller\Resource\IndexControler::class;
+        return \App\Admin\Http\Controller\Resource\IndexController::class;
     }
 
     public function fields()
@@ -89,7 +89,7 @@ public function redirectAfterDelete()
 
 
 
-
+*/
 
 
 
