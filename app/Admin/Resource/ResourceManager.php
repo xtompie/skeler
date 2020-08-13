@@ -22,6 +22,16 @@ class ResourceManager
         return self::resources()[$name];
     }
 
+    /**
+     * @param  \Illuminate\Http\Request $request
+     * @return \App\Admin\Resource\Resource
+     */
+    public static function resourceByRequest($request)
+    {
+        $resource = self::resource($request->route()->getAction()['resource']);
+        return $resource ? $resource->withRequest($request) : null;
+    }
+
     public static function each()
     {
         return self::resources()->each;
