@@ -12,3 +12,7 @@
 */
 
 require base_path('app/Admin/Routes/routes.php');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');

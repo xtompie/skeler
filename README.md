@@ -1,61 +1,137 @@
-<p align="center"><img src="https://res.cloudinary.com/dtfbvvkyp/image/upload/v1566331377/laravel-logolockup-cmyk-red.svg" width="400"></p>
+# Skeler
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+## Installation
 
-## About Laravel
+Each command below is for WSL
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Envoriment
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. Windows 10
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+2. WSL - Windows Subsystem for Linux (v1)
 
-## Learning Laravel
+3. Ubuntu 18.04 LTS, on WSL, from Microsoft Store, up to date 
+- `sudo apt update && sudo apt upgrade -y`
+- `printf "[automount]\noptions = \"metadata\"\n" | sudo tee -a /etc/wsl.conf`
+- Register useful aliases for WSL, read attentively what does it do:
+    - `echo "alias code=\"/mnt/c/Program\ Files/Microsoft\ VS\ Code/Code.exe\"" >> ~/.bash_aliases && exec $SHELL`
+    - `echo "alias cmd=\"/mnt/c/Windows/System32/cmd.exe\"" >> ~/.bash_aliases && exec $SHELL`
+    - `echo "alias cdp=\"cd /mnt/c/Users/tomek/projects\"" >> ~/.bash_aliases && exec $SHELL`
+- Rebot host system (Windows)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+4. unzip
+`sudo apt install -y unzip`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+5. php7.3
+- `sudo apt install -y software-properties-common && sudo add-apt-repository -y ppa:ondrej/php && sudo apt install -y php7.3 && php -v`
 
-## Laravel Sponsors
+6. php7.3 extensions
+`sudo apt install -y php7.3-zip php7.3-mysql php7.3-xml php7.3-curl php7.3-mbstring php7.3-bz2`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+6. nginx 
+`sudo apt install -y nginx && sudo service nginx start`
 
-### Premium Partners
+7. php7.3-fpm
+`sudo apt install php7.3-fpm && sudo service php7.3-fpm start`
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[OP.GG](https://op.gg)**
+8. mariadb (mysql)
+- `sudo apt install -y mariadb-server && sudo service mysql start`
+- `mysql_secure_installation`
+- `sudo mysql -u root -p -e "USE mysql;UPDATE user SET plugin='mysql_native_password' WHERE User='root';FLUSH PRIVILEGES;" && sudo service mysql restart`
 
-## Contributing
+9. composer
+https://getcomposer.org linux instalation, globally,
+tl;dr
+  - https://getcomposer.org/doc/faqs/how-to-install-composer-programmatically.md -> find `wget https...` -> run it
+  - `sudo mv composer.phar /usr/local/bin/composer`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+10. node.js v14
+`curl -sL https://deb.nodesource.com/setup_14.x | sudo bash - && sudo apt -y install nodejs && node  -v`
 
-## Code of Conduct
+11. phpmyadmin OPTIOANL
+If u develop only frontend u dont need this
+`cdp && mkdir phpmyadmin && cd phpmyadmin && composer create-project phpmyadmin/phpmyadmin .`
+`sudo nano /etc/nginx/sites-enabled/phpmyadmin`
+paste and adjust:
+```
+server {
+    listen 80;
+    server_name phpmyadmin.localhost;
+    root /mnt/c/Users/tomek/projects/phpmyadmin;
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    error_log /var/log/nginx/phpmyadmin.access_log;
+    access_log /var/log/nginx/phpmyadmin.error_log;
 
-## Security Vulnerabilities
+    index index.php;
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
 
-## License
+    location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico|xml)$ {
+        access_log        off;
+        expires           360d;
+    }
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+    location ~ /\.ht {
+        deny  all;
+    }
+
+    location ~ /(libraries|setup/frames|setup/libs) {
+        deny all;
+        return 404;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php7.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+```
+
+### Project
+
+1. Configure nginx vhost
+- `sudo rm /etc/nginx/sites-enabled/default`
+- `sudo nano /etc/nginx/sites-enabled/skeler`
+paste, adjust and save:
+```
+server {
+    listen 80;
+    server_name skeler.localhost;
+    root /mnt/c/Users/tomek/projects/skeler/public;
+
+    error_log /var/log/nginx/skeler.access_log;
+    access_log /var/log/nginx/skeler.error_log;
+
+    charset utf-8;
+
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php7.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}
+```
+- `sudo service nginx restart`
+
+2. Create database `mysql -u root -p -e "CREATE DATABASE skeler;"`
+
+3. Configure .env - database, url, goto project dir and run `code .env`
+
+4. Install composer packages
+`composer install` (in project direcotry)
+
+5. Install node packages
+`npm i` (in project direcotry)

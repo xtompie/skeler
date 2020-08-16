@@ -13,15 +13,13 @@ class IndexController extends Controller
         $resource = ResourceManager::resourceByRequest(request());
         abort_unless($resource, 404);
         $resource->aclIndex();
+        return view('home');
         // return view($resource->viewIndex(), [
         //     'data' => $resource->getResourcesForIndex()->map(function($i) {
         //         return $i->dataIndex();
         //     }),
         // ]);
-        dump(app(\Faker\Generator::class)->sentence(6, true));
-        dump(app(\Faker\Generator::class)->paragraph(3, true));
-        dump(app(\Faker\Generator::class)->text(600));
-        dd();
+
     }
 
 }
