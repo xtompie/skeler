@@ -1,16 +1,16 @@
 # Skeler
 
-## Installation
+## Setup
 
 Each command below is for WSL
 
 ### Envoriment
 
-1. Windows 10
+#### 1. Windows 10
 
-2. WSL - Windows Subsystem for Linux (v1)
+#### 2. WSL - Windows Subsystem for Linux (v1)
 
-3. Ubuntu 18.04 LTS, on WSL, from Microsoft Store, up to date 
+#### 3. Ubuntu 18.04 LTS, on WSL, from Microsoft Store, up to date 
 - `sudo apt update && sudo apt upgrade -y`
 - `printf "[automount]\noptions = \"metadata\"\n" | sudo tee -a /etc/wsl.conf`
 - Register useful aliases for WSL, read attentively what does it do:
@@ -19,36 +19,35 @@ Each command below is for WSL
     - `echo "alias cdp=\"cd /mnt/c/Users/tomek/projects\"" >> ~/.bash_aliases && exec $SHELL`
 - Rebot host system (Windows)
 
-4. unzip
+#### 4. unzip
 `sudo apt install -y unzip`
 
-5. php7.3
+#### 5. php7.3
 - `sudo apt install -y software-properties-common && sudo add-apt-repository -y ppa:ondrej/php && sudo apt install -y php7.3 && php -v`
 
-6. php7.3 extensions
+#### 6. php7.3 extensions
 `sudo apt install -y php7.3-zip php7.3-mysql php7.3-xml php7.3-curl php7.3-mbstring php7.3-bz2`
 
-6. nginx 
+#### 6. nginx 
 `sudo apt install -y nginx && sudo service nginx start`
 
-7. php7.3-fpm
+#### 7. php7.3-fpm
 `sudo apt install php7.3-fpm && sudo service php7.3-fpm start`
 
-8. mariadb (mysql)
+#### 8. mariadb (mysql)
 - `sudo apt install -y mariadb-server && sudo service mysql start`
-- `mysql_secure_installation`
-- `sudo mysql -u root -p -e "USE mysql;UPDATE user SET plugin='mysql_native_password' WHERE User='root';FLUSH PRIVILEGES;" && sudo service mysql restart`
+- `sudo mysql -e "CREATE USER 'user'@'localhost' IDENTIFIED BY 'pass';GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';FLUSH PRIVILEGES;" && sudo service mysql restart`
 
-9. composer
-https://getcomposer.org linux instalation, globally,
-tl;dr
-  - https://getcomposer.org/doc/faqs/how-to-install-composer-programmatically.md -> find `wget https...` -> run it
-  - `sudo mv composer.phar /usr/local/bin/composer`
+#### 9. composer
+- https://getcomposer.org linux instalation, globally,
+- tl;dr
+    - https://getcomposer.org/doc/faqs/how-to-install-composer-programmatically.md -> find `wget https...` -> run it
+    - `sudo mv composer.phar /usr/local/bin/composer`
 
-10. node.js v14
+#### 10. node.js v14
 `curl -sL https://deb.nodesource.com/setup_14.x | sudo bash - && sudo apt -y install nodejs && node  -v`
 
-11. phpmyadmin OPTIOANL
+#### 11. phpmyadmin OPTIOANL
 If u develop only frontend u dont need this
 `cdp && mkdir phpmyadmin && cd phpmyadmin && composer create-project phpmyadmin/phpmyadmin .`
 `sudo nano /etc/nginx/sites-enabled/phpmyadmin`
@@ -91,7 +90,7 @@ server {
 
 ### Project
 
-1. Configure nginx vhost
+#### 1. Configure nginx vhost
 - `sudo rm /etc/nginx/sites-enabled/default`
 - `sudo nano /etc/nginx/sites-enabled/skeler`
 paste, adjust and save:
@@ -126,12 +125,31 @@ server {
 ```
 - `sudo service nginx restart`
 
-2. Create database `mysql -u root -p -e "CREATE DATABASE skeler;"`
+#### 2. Create database 
+`mysql -u root -p -e "CREATE DATABASE skeler;"`
 
-3. Configure .env - database, url, goto project dir and run `code .env`
+#### 3. Configure .env 
+`cp .env.example .env && php artisan key:generate` (in project direcotry)
 
-4. Install composer packages
+#### 4. Install composer packages
 `composer install` (in project direcotry)
 
-5. Install node packages
+#### 5. Install node packages
 `npm i` (in project direcotry)
+
+#### 6. Database migration
+`php artisan migrate`
+
+#### 7. Database seed
+`php artisan db:seed`
+
+## Daily usage
+
+#### 1. Check status
+`sudo service --status-all`
+
+#### 2. Start what u need 
+`sudo service cron start && sudo service mysql start && sudo service nginx start && sudo service php7.3-fpm start`
+
+Feel free to create an alias for that:
+`echo "alias startall=\"sudo service cron start && sudo service mysql start && sudo service nginx start && sudo service php7.3-fpm start\"" >> ~/.bash_aliases && exec $SHELL`

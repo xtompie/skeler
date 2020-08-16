@@ -1,5 +1,8 @@
 <?php
 
+
+use \Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,6 +16,6 @@
 
 require base_path('app/Admin/Routes/routes.php');
 
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/', function() {
+    return view('home');
+});
