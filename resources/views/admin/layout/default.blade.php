@@ -10,7 +10,7 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Scripts -->
-    <script src="{{ mix('resources/admin/main.js') }}" defer></script>
+    <script src="resources/admin/js/app.js"></script>
 
 
     <!-- Styles -->
