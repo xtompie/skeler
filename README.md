@@ -143,6 +143,12 @@ server {
 #### 7. Database seed
 `php artisan db:seed`
 
+### 8. 
+`php artisan storage:link`
+
+### 9. 
+`npm i`
+
 ## Daily usage
 
 #### 1. Check status

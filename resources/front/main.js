@@ -1,3 +1,0 @@
-function xd() {
-    alert('XD')
-}

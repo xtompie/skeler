@@ -1,45 +1,8 @@
 {
-  "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:admin\" \"npm run dev:front\" --kill-others-on-fail",
-    "dev:": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "dev:admin": "npm run dev: --resource=admin --",
-    "dev:front": "npm run dev: --resource=front --",
-    "hot:": "cross-env NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --disable-host-check --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "hot:admin": "npm run hot: --resource=admin",
-    "hot:front": "npm run hot: --resource=front",
-    "prod": "npm run prod:admin && npm run prod:front",
-    "prod:": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-    "prod:admin": "npm run prod: --resource=admin",
-    "prod:front": "npm run prod: --resource=front",
-    "watch": "concurrently \"npm run watch:admin\"  \"npm run watch:front\"",
-    "watch:admin": "npm run dev:admin -- --watch",
-    "watch:front": "npm run dev:front -- --watch",
-    "watch-pool": "concurrently \"npm run watch-pool:admin\"  \"npm run watch-pool:front\"",
-    "watch-pool:admin": "npm run watch:admin -- --watch-pool",
-    "watch-pool:front": "npm run watch:front -- --watch-pool"
-  },
-  "dependencies": {
-    "concurrently": "^5.3.0",
-    "vuetify": "^2.2.11"
-  },
-  "devDependencies": {
-    "axios": "^0.19",
-    "bootstrap": "^4.0.0",
-    "cross-env": "^7.0",
-    "fibers": "^5.0.0",
-    "jquery": "^3.2",
-    "laravel-mix": "^5.0.1",
-    "laravel-mix-merge-manifest": "^0.1.2",
-    "lodash": "^4.17.19",
-    "popper.js": "^1.12",
-    "resolve-url-loader": "^2.3.1",
-    "sass": "^1.20.1",
-    "sass-loader": "^8.0.0",
-    "vue": "^2.5.17",
-    "vue-cli-plugin-vuetify": "~2.0.7",
-    "vue-template-compiler": "^2.6.10",
-    "vuetify-loader": "^1.3.0",
-    "vuetifyjs-mix-extension": "0.0.14"
+    "install": "(cd resources/admin && npm install) && (cd resources/front && npm install)",
+    "i": "npm run install",
+    "dev": "(cd resources/admin && npm run dev) && (cd resources/front && npm run dev)",
+    "prod": "(cd resources/admin && npm run prod) && (cd resources/front && npm run prod)"
   }
 }
