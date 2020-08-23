@@ -5,11 +5,14 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "dev": "npm run build",
+    "prod": "npm run build"
   },
   "dependencies": {
     "core-js": "^3.6.5",
     "vue": "^2.6.11",
+    "vue-router": "^3.4.3",
     "vuetify": "^2.2.11"
   },
   "devDependencies": {
