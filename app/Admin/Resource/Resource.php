@@ -2,6 +2,7 @@
 
 namespace App\Admin\Resource;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -15,6 +16,11 @@ class Resource
     protected $request;
 
     /**
+     * @var Model $model
+     */
+    protected $model;
+
+    /**
      * @param Request $request
      * @return self
      */
@@ -25,14 +31,21 @@ class Resource
         return $resource;
     }
 
+    public function withModel(Model $model)
+    {
+        $resource = clone $this;
+        $resource->model = $model;
+        return $resource;
+    }
+
     public function key()
     {
         return Str::snake(class_basename($this));
     }
 
-    public function model()
+    public function modelClass()
     {
-        return "App\\Model\\" + class_basename($this);
+        return "App\\Model\\" . class_basename($this);
     }
 
     public function routeRegister()
@@ -57,7 +70,7 @@ class Resource
 
     public function viewIndex()
     {
-
+        return 'admin.resource.resource.index';
     }
 
     public function fields()
@@ -70,57 +83,29 @@ class Resource
 
     public function fieldsForIndex()
     {
-
     }
 
     public function getResourcesForIndex()
     {
-        return collect();
+        $query = $this->query();
+
+        $resources = $query->paginate(20)->map(function ($i) {
+            return $this->withModel($i);
+        });
+
+        dd($resources);
+
+        return $resources;
     }
 
+    public function getDataForIndex()
+    {
+
+    }
+
+    protected function query()
+    {
+        return call_user_func([$this->modelClass(), 'query']);
+    }
 
 }
-
-/*
-
-public function controllerCreate()
-{
-    return \Module\Admin\Http\Controller\Resource\CreateController::class;
-}
-
-public function controllerDetail()
-{
-    return \Module\Admin\Http\Controller\Resource\CreateController::class;
-}
-
-public function controllerUpdate()
-{
-    return \Module\Admin\Http\Controller\Resource\UpdateController::class;
-}
-
-public function controllerDelete()
-{
-    return \Module\Admin\Http\Controller\Resource\DeleteController::class;
-}
-
-public function redirectAfterCreate()
-{
-
-}
-
-public function redirectAfterUpdate()
-{
-
-}
-
-public function redirectAfterDelete()
-{
-
-}
-
-
-
-*/
-
-
-
