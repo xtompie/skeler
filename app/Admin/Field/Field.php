@@ -110,6 +110,31 @@ class Field
         return $this;
     }
 
+    public function fieldForIndex()
+    {
+        return $this->showOnIndex() ? clone $this : null;
+    }
+
+    public function fieldForCreate()
+    {
+        return $this->showOnCreate() ? clone $this : null;
+    }
+
+    public function fieldForDetail()
+    {
+        return $this->showOnDetail() ? clone $this : null;
+    }
+
+    public function fieldForUpdate()
+    {
+        return $this->showOnUpdate() ? clone $this : null;
+    }
+
+    public function fieldForDelete()
+    {
+        return $this->showOnDelete() ? clone $this : null;
+    }
+
 }
 
 

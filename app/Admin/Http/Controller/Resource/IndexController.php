@@ -12,10 +12,10 @@ class IndexController extends Controller
     {
         $resource = ResourceManager::resourceByRequest(request());
         abort_unless($resource, 404);
-        $resource->aclIndex();
-        return view($resource->viewIndex(), [
-            'data' => $resource->getResourcesForIndex()->map(function($i) {
-                return $i->getDataForIndex();
+        $resource->aclForIndex();
+        return view($resource->viewForIndex(), [
+            'data' => $resource->resourcesForIndex()->map(function($i) {
+                return $i->viewDataForIndex();
             }),
         ]);
 

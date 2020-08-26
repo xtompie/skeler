@@ -20,6 +20,7 @@ class Resource
      */
     protected $model;
 
+
     /**
      * @param Request $request
      * @return self
@@ -63,12 +64,12 @@ class Resource
         return \App\Admin\Http\Controller\Resource\IndexController::class;
     }
 
-    public function aclIndex()
+    public function aclForIndex()
     {
 
     }
 
-    public function viewIndex()
+    public function viewForIndex()
     {
         return 'admin.resource.resource.index';
     }
@@ -83,11 +84,18 @@ class Resource
 
     public function fieldsForIndex()
     {
+        return collect($this->fields())
+            ->map(function($field) {
+                return $field->fieldForIndex();
+            })
+            ->filter()
+            ->toArray()
+        ;
     }
 
-    public function getResourcesForIndex()
+    public function resourcesForIndex()
     {
-        $query = $this->query();
+        $query = $this->queryForIndex();
 
         $resources = $query->paginate(20)->map(function ($i) {
             return $this->withModel($i);
@@ -98,9 +106,19 @@ class Resource
         return $resources;
     }
 
-    public function getDataForIndex()
+    public function dataForIndex()
     {
+        return collect($this->fieldsForIndex())
+            ->map(function($field) {
+                return $field->withResource($this)->viewData();
+            })
+            ->toArray()
+        ;;
+    }
 
+    public function queryForIndex()
+    {
+        return $this->query();
     }
 
     protected function query()
