@@ -6,9 +6,40 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use \ReflectionClass;
 
 class Resource
 {
+
+    public static function resources()
+    {
+        return collect(config('admin.resources'))
+            ->mapWithKeys(function($i) {
+                $resource = (new ReflectionClass($i))->newInstance();
+                return [$resource->name() => $resource];
+            })
+        ;
+    }
+
+    public static function resource($name)
+    {
+        return self::resources()[$name];
+    }
+
+    /**
+     * @param  \Illuminate\Http\Request $request
+     * @return \App\Admin\Resource\Resource
+     */
+    public static function resourceByRequest($request)
+    {
+        $resource = self::resource($request->route()->getAction()['resource']);
+        return $resource ? $resource->withRequest($request) : null;
+    }
+
+    public static function each()
+    {
+        return self::resources()->each;
+    }
 
     /**
      * @var Request $request
@@ -19,7 +50,6 @@ class Resource
      * @var Model $model
      */
     protected $model;
-
 
     /**
      * @param Request $request
@@ -39,7 +69,7 @@ class Resource
         return $resource;
     }
 
-    public function key()
+    public function name()
     {
         return Str::snake(class_basename($this));
     }
@@ -49,19 +79,93 @@ class Resource
         return "App\\Model\\" . class_basename($this);
     }
 
+    public function model()
+    {
+        return $this->model;
+    }
+
     public function routeRegister()
     {
         Route::group([
-            'prefix' => 'resource/' . $this->key(),
-            'resource' => $this->key(),
+            'prefix' => 'resource/' . $this->name(),
+            'resource' => $this->name(),
         ], function () {
-            Route::get('', $this->controllerIndex());
+            $this->routeRegisterForIndex();
+            $this->routeRegisterForDetail();
+            $this->routeRegisterForCreate();
+            $this->routeRegisterForUpdate();
+            $this->routeRegisterForDelete();
         });
     }
 
-    public function controllerIndex()
+    public function routeRegisterForIndex()
+    {
+        Route::get('index', [
+            'context' => 'index',
+            'uses' => $this->controllerForIndex(),
+        ]);
+    }
+
+    public function routeRegisterForDetail()
+    {
+        Route::get('detail/{id}', [
+            'context' => 'detail',
+            'uses' => $this->controllerForDetail(),
+        ]);
+    }
+
+    public function routeRegisterForCreate()
+    {
+        Route::get('create', [
+            'context' => 'create',
+            'uses' => $this->controllerForCreate(),
+        ]);
+    }
+
+    public function routeRegisterForUpdate()
+    {
+        Route::get('update/{id}', [
+            'context' => 'update',
+            'uses' => $this->controllerForUpdate(),
+        ]);
+    }
+
+    public function routeRegisterForDelete()
+    {
+        Route::get('delete/{id}', [
+            'context' => 'delete',
+            'uses' => $this->controllerForDelete(),
+        ]);
+    }
+
+    public function controllerForIndex()
     {
         return \App\Admin\Http\Controller\Resource\IndexController::class;
+    }
+
+    public function controllerForDetail()
+    {
+        return \App\Admin\Http\Controller\Resource\DetailController::class;
+    }
+
+    public function controllerForCreate()
+    {
+        return \App\Admin\Http\Controller\Resource\CreateController::class;
+    }
+
+    public function controllerForUpdate()
+    {
+        return \App\Admin\Http\Controller\Resource\UpdateController::class;
+    }
+
+    public function controllerForDelete()
+    {
+        return \App\Admin\Http\Controller\Resource\DeleteController::class;
+    }
+
+    public function context()
+    {
+        $this->request->route()->getAction()['context'];
     }
 
     public function aclForIndex()
@@ -69,17 +173,81 @@ class Resource
 
     }
 
+    public function aclForDetail()
+    {
+
+    }
+
+    public function aclForCreate()
+    {
+
+    }
+
+    public function aclForUpdate()
+    {
+
+    }
+
+    public function aclForDelete()
+    {
+
+    }
+
+    public function id()
+    {
+        return $this->model->id;
+    }
+
+
+    public function title()
+    {
+        $attrs = collect($this->model->getAttributes())->keys();
+        foreach (['title', 'name', 'id'] as $attr) {
+            if ($attrs->contains('title')) {
+                return $this->model->$attr;
+            }
+        }
+        return null;
+    }
+
+    public function subtitle()
+    {
+        return null;
+    }
+
+    public function avatar()
+    {
+        return null;
+    }
+
     public function viewForIndex()
     {
         return 'admin.resource.resource.index';
     }
 
+    public function viewForDetail()
+    {
+        return 'admin.resource.resource.detail';
+    }
+
+    public function viewForCreate()
+    {
+        return 'admin.resource.resource.create';
+    }
+
+    public function viewForUpdate()
+    {
+        return 'admin.resource.resource.update';
+    }
+
+    public function viewForDelete()
+    {
+        return 'admin.resource.resource.delete';
+    }
+
     public function fields()
     {
-        // return [
-        //     Field::make()->sortable(),
-        //     Text::make('Name')->sortable(),
-        // ];
+        return [];
     }
 
     public function fieldsForIndex()
@@ -89,7 +257,36 @@ class Resource
                 return $field->fieldForIndex();
             })
             ->filter()
-            ->toArray()
+        ;
+    }
+
+    public function fieldsForDetail()
+    {
+        return collect($this->fields())
+            ->map(function($field) {
+                return $field->fieldForDetail();
+            })
+            ->filter()
+        ;
+    }
+
+    public function fieldsForCreate()
+    {
+        return collect($this->fields())
+            ->map(function($field) {
+                return $field->fieldForCreate();
+            })
+            ->filter()
+        ;
+    }
+
+    public function fieldsForUpdate()
+    {
+        return collect($this->fields())
+            ->map(function($field) {
+                return $field->fieldForUpdate();
+            })
+            ->filter()
         ;
     }
 
@@ -97,26 +294,72 @@ class Resource
     {
         $query = $this->queryForIndex();
 
-        $resources = $query->paginate(20)->map(function ($i) {
-            return $this->withModel($i);
-        });
+        $models = $query->paginate(20);
 
-        dd($resources);
+        $result = [
+            'models' => $models,
+            'resources' => $models->map(function($model) {
+                return $this->withModel($model);
+            }),
+        ];
 
-        return $resources;
+        return $result;
     }
 
-    public function dataForIndex()
+    public function resourceForDetail()
+    {
+        $query = $this->queryForDetail();
+
+        $model = $query->find($this->request->id);
+
+        if (!$model) {
+            return null;
+        }
+
+        $resource = $this->withModel($model);
+
+        return $resource;
+    }
+
+    public function vmForIndex()
     {
         return collect($this->fieldsForIndex())
             ->map(function($field) {
-                return $field->withResource($this)->viewData();
+                return $field->withResource($this)->vm();
             })
-            ->toArray()
-        ;;
+        ;
+    }
+
+    public function vmForDetail()
+    {
+        return collect($this->fieldsForDetail())
+            ->map(function($field) {
+                return $field->withResource($this)->vm();
+            })
+        ;
     }
 
     public function queryForIndex()
+    {
+        return $this->query();
+    }
+
+    public function queryForDetail()
+    {
+        return $this->query();
+    }
+
+    public function queryForCreate()
+    {
+        return $this->query();
+    }
+
+    public function queryForUpdate()
+    {
+        return $this->query();
+    }
+
+    public function queryForDelete()
     {
         return $this->query();
     }

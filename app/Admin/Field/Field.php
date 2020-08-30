@@ -2,9 +2,15 @@
 
 namespace App\Admin\Field;
 
+use App\Admin\Resource\Resource;
+
 class Field
 {
 
+    /**
+     * @var App\Admin\Resource\Resource $resource
+     */
+    protected $resource;
     protected $type;
     protected $name;
     protected $label;
@@ -13,11 +19,21 @@ class Field
     protected $showOnCreate = true;
     protected $showOnDetail = true;
     protected $showOnUpdate = true;
-    protected $showOnDelete = true;
 
-    public static function make($type = null)
+    public static function make()
     {
-        return new static($type);
+        return new static();
+    }
+
+    /**
+     * @param Resource $resource
+     * @return self
+     */
+    public function withResource(Resource $resource)
+    {
+        $field = clone $this;
+        $field->resource = $resource;
+        return $field;
     }
 
     public function type($type = null)
@@ -50,9 +66,9 @@ class Field
     public function showOnAll($show = null)
     {
         if (func_num_args() == 0) {
-            return $this->showOnIndex && $this->showOnCreate && $this->showOnDetail && $this->showOnUpdate && $this->showOnDelete;
+            return $this->showOnIndex && $this->showOnCreate && $this->showOnDetail && $this->showOnUpdate;
         }
-        $this->showOnIndex = $this->showOnCreate = $this->showOnDetail = $this->showOnUpdate = $this->showOnDelete = $show;
+        $this->showOnIndex = $this->showOnCreate = $this->showOnDetail = $this->showOnUpdate = $show;
         return $this;
     }
 
@@ -92,22 +108,24 @@ class Field
         return $this;
     }
 
-    public function showOnDelete($show = null)
+    public function view($view = null)
     {
         if (func_num_args() == 0) {
-            return $this->showOnDelete;
-        }
-        $this->showOnDelete = $show;
-        return $this;
-    }
-
-    public function view($view)
-    {
-        if (func_num_args() == 0) {
-            return $this->view !== null ? $this->view : "admin.filed." . $this->type();
+            return $this->view !== null ? $this->view : "admin.field." . $this->type();
         }
         $this->view = $view;
         return $this;
+    }
+
+    public function vm()
+    {
+        return [
+            'view' => $this->view(),
+            'type' => $this->type(),
+            'name' => $this->name(),
+            'label' => $this->label(),
+            'value' => $this->value(),
+        ];
     }
 
     public function fieldForIndex()
@@ -130,9 +148,9 @@ class Field
         return $this->showOnUpdate() ? clone $this : null;
     }
 
-    public function fieldForDelete()
+    public function value()
     {
-        return $this->showOnDelete() ? clone $this : null;
+        return $this->resource->model()->{$this->name()};
     }
 
 }

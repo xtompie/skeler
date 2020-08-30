@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Admin\Resource\ResourceManager;
+use App\Admin\Resource\Resource;
 
 
 Route::group(
@@ -12,7 +12,7 @@ Route::group(
 
         Route::get('', App\Admin\Http\Controller\Index::class);
 
-        ResourceManager::each()->routeRegister();
+        Resource::each()->routeRegister();
 
         Route::get('test', App\Admin\Http\Controller\Test::class);
 
