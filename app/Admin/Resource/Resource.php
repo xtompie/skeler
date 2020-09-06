@@ -11,6 +11,8 @@ use \ReflectionClass;
 class Resource
 {
 
+    /* static */
+
     public static function makeAll()
     {
         return collect(config('admin.resources'))
@@ -30,6 +32,8 @@ class Resource
     {
         return self::makeAll()->each;
     }
+
+    /* instance */
 
     /**
      * Context index|detail|create|update|delete
@@ -231,17 +235,6 @@ class Resource
         return call_user_func([$this->modelClass(), 'query']);
     }
 
-    public function queryForIndex()
-    {
-        return $this->query();
-    }
-
-    public function queryForItem()
-    {
-        return $this->query();
-    }
-
-
     public function resourcesByParams($params)
     {
         $query = $this->query();
@@ -261,10 +254,7 @@ class Resource
     public function resourceNew($params)
     {
         return $this->withModel(
-            (new ReflectionClass(
-                $this->modelClass()
-            ))
-                ->newInstance()
+            (new ReflectionClass($this->modelClass()))->newInstance()
         );
     }
 

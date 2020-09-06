@@ -16,12 +16,12 @@ class Field
     protected $name;
     protected $label;
     protected $view;
-    protected $rules = [];
-    protected $rulesUsing;
     protected $loadUsing;
     protected $storeUsing;
-    protected $showOn = true;
     protected $showUsing;
+    protected $showOn = true;
+    protected $rules = [];
+    protected $rulesUsing;
 
     /**
      * @return self
