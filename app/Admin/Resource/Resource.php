@@ -2,16 +2,16 @@
 
 namespace App\Admin\Resource;
 
+use App\Admin\Field\Field;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Illuminate\Http\Request;
 use \ReflectionClass;
 
 class Resource
 {
 
-    public static function resources()
+    public static function makeAll()
     {
         return collect(config('admin.resources'))
             ->mapWithKeys(function($i) {
@@ -21,44 +21,33 @@ class Resource
         ;
     }
 
-    public static function resource($name)
+    public static function make($name)
     {
-        return self::resources()[$name];
-    }
-
-    /**
-     * @param  \Illuminate\Http\Request $request
-     * @return \App\Admin\Resource\Resource
-     */
-    public static function resourceByRequest($request)
-    {
-        $resource = self::resource($request->route()->getAction()['resource']);
-        return $resource ? $resource->withRequest($request) : null;
+        return self::makeAll()[$name];
     }
 
     public static function each()
     {
-        return self::resources()->each;
+        return self::makeAll()->each;
     }
 
     /**
-     * @var Request $request
+     * Context index|detail|create|update|delete
+     *
+     * @var String
      */
-    protected $request;
-
+    protected $context;
     /**
      * @var Model $model
      */
     protected $model;
 
-    /**
-     * @param Request $request
-     * @return self
-     */
-    public function withRequest(Request $request)
+    /* mutables */
+
+    public function withContext($context)
     {
         $resource = clone $this;
-        $resource->request = $request;
+        $resource->context = $context;
         return $resource;
     }
 
@@ -68,6 +57,131 @@ class Resource
         $resource->model = $model;
         return $resource;
     }
+
+    /* context */
+
+    public function context()
+    {
+        return $this->context;
+    }
+
+    /* routes */
+
+    public function routeRegister()
+    {
+        Route::group(
+            [
+                'prefix' => 'resource/' . $this->name(),
+            ],
+            function () {
+                $this->routeRegisterAll();
+            }
+        );
+    }
+
+    public function routeRegisterAll()
+    {
+        $this->routeRegisterForIndex();
+        $this->routeRegisterForDetail();
+        $this->routeRegisterForCreate();
+        $this->routeRegisterForUpdate();
+        $this->routeRegisterForDelete();
+    }
+
+    public function routeRegisterForIndex()
+    {
+        Route::get('', [
+            'resource' => $this->name(),
+            'context' => 'index',
+            'uses' => \App\Admin\Http\Controller\Resource\Resource\IndexController::class,
+        ])->name("admin.resource.{$this->name()}.index");
+    }
+
+    public function routeRegisterForDetail()
+    {
+        Route::get('{id}', [
+            'resource' => $this->name(),
+            'context' => 'detail',
+            'uses' => \App\Admin\Http\Controller\Resource\Resource\DetailController::class,
+        ])
+            ->where('id', '[0-9]+')
+            ->name("admin.resource.{$this->name()}.detail")
+        ;
+    }
+
+    public function routeRegisterForCreate()
+    {
+        Route::match(['get', 'post'], 'create', [
+            'resource' => $this->name(),
+            'context' => 'create',
+            'uses' => \App\Admin\Http\Controller\Resource\Resource\CreateController::class,
+        ])
+            ->name("admin.resource.{$this->name()}.create")
+        ;
+    }
+
+    public function routeRegisterForUpdate()
+    {
+        Route::match(['get', 'post'], '/{id}/update', [
+            'resource' => $this->name(),
+            'context' => 'update',
+            'uses' => \App\Admin\Http\Controller\Resource\Resource\UpdateController::class,
+        ])
+            ->where('id', '[0-9]+')
+            ->name("admin.resource.{$this->name()}.update")
+        ;
+    }
+
+    public function routeRegisterForDelete()
+    {
+        Route::match(['get', 'post'], '{id}/delete', [
+            'resource' => $this->name(),
+            'context' => 'delete',
+            'uses' => \App\Admin\Http\Controller\Resource\Resource\DeleteController::class,
+        ])
+            ->where('id', '[0-9]+')
+            ->name("admin.resource.{$this->name()}.delete")
+        ;
+    }
+
+    /* redirect */
+
+    public function redirect()
+    {
+        if ($this->context() == 'create') {
+            $this->redirectForCreate();
+        }
+        if ($this->context() == 'update') {
+            $this->redirectForUpdate();
+        }
+        if ($this->context() == 'delete') {
+            $this->redirectForDelete();
+        }
+    }
+
+    public function redirectForCreate()
+    {
+        redirect()->route("admin.resource.{$this->name()}.update", ['id' => $this->id()]);
+    }
+
+    public function redirectForUpdate()
+    {
+        redirect()->route("admin.resource.{$this->name()}.update", ['id' => $this->id()]);
+    }
+
+    public function redirectForDelete()
+    {
+        redirect()->route("admin.resource.{$this->name()}.index");
+    }
+
+    /* acl */
+
+    public function acl()
+    {
+
+    }
+
+    /* properties */
 
     public function name()
     {
@@ -84,120 +198,10 @@ class Resource
         return $this->model;
     }
 
-    public function routeRegister()
-    {
-        Route::group([
-            'prefix' => 'resource/' . $this->name(),
-            'resource' => $this->name(),
-        ], function () {
-            $this->routeRegisterForIndex();
-            $this->routeRegisterForDetail();
-            $this->routeRegisterForCreate();
-            $this->routeRegisterForUpdate();
-            $this->routeRegisterForDelete();
-        });
-    }
-
-    public function routeRegisterForIndex()
-    {
-        Route::get('index', [
-            'context' => 'index',
-            'uses' => $this->controllerForIndex(),
-        ]);
-    }
-
-    public function routeRegisterForDetail()
-    {
-        Route::get('detail/{id}', [
-            'context' => 'detail',
-            'uses' => $this->controllerForDetail(),
-        ]);
-    }
-
-    public function routeRegisterForCreate()
-    {
-        Route::get('create', [
-            'context' => 'create',
-            'uses' => $this->controllerForCreate(),
-        ]);
-    }
-
-    public function routeRegisterForUpdate()
-    {
-        Route::get('update/{id}', [
-            'context' => 'update',
-            'uses' => $this->controllerForUpdate(),
-        ]);
-    }
-
-    public function routeRegisterForDelete()
-    {
-        Route::get('delete/{id}', [
-            'context' => 'delete',
-            'uses' => $this->controllerForDelete(),
-        ]);
-    }
-
-    public function controllerForIndex()
-    {
-        return \App\Admin\Http\Controller\Resource\IndexController::class;
-    }
-
-    public function controllerForDetail()
-    {
-        return \App\Admin\Http\Controller\Resource\DetailController::class;
-    }
-
-    public function controllerForCreate()
-    {
-        return \App\Admin\Http\Controller\Resource\CreateController::class;
-    }
-
-    public function controllerForUpdate()
-    {
-        return \App\Admin\Http\Controller\Resource\UpdateController::class;
-    }
-
-    public function controllerForDelete()
-    {
-        return \App\Admin\Http\Controller\Resource\DeleteController::class;
-    }
-
-    public function context()
-    {
-        $this->request->route()->getAction()['context'];
-    }
-
-    public function aclForIndex()
-    {
-
-    }
-
-    public function aclForDetail()
-    {
-
-    }
-
-    public function aclForCreate()
-    {
-
-    }
-
-    public function aclForUpdate()
-    {
-
-    }
-
-    public function aclForDelete()
-    {
-
-    }
-
     public function id()
     {
         return $this->model->id;
     }
-
 
     public function title()
     {
@@ -220,79 +224,27 @@ class Resource
         return null;
     }
 
-    public function viewForIndex()
+    /* query */
+
+    protected function query()
     {
-        return 'admin.resource.resource.index';
+        return call_user_func([$this->modelClass(), 'query']);
     }
 
-    public function viewForDetail()
+    public function queryForIndex()
     {
-        return 'admin.resource.resource.detail';
+        return $this->query();
     }
 
-    public function viewForCreate()
+    public function queryForItem()
     {
-        return 'admin.resource.resource.create';
+        return $this->query();
     }
 
-    public function viewForUpdate()
-    {
-        return 'admin.resource.resource.update';
-    }
 
-    public function viewForDelete()
+    public function resourcesByParams($params)
     {
-        return 'admin.resource.resource.delete';
-    }
-
-    public function fields()
-    {
-        return [];
-    }
-
-    public function fieldsForIndex()
-    {
-        return collect($this->fields())
-            ->map(function($field) {
-                return $field->fieldForIndex();
-            })
-            ->filter()
-        ;
-    }
-
-    public function fieldsForDetail()
-    {
-        return collect($this->fields())
-            ->map(function($field) {
-                return $field->fieldForDetail();
-            })
-            ->filter()
-        ;
-    }
-
-    public function fieldsForCreate()
-    {
-        return collect($this->fields())
-            ->map(function($field) {
-                return $field->fieldForCreate();
-            })
-            ->filter()
-        ;
-    }
-
-    public function fieldsForUpdate()
-    {
-        return collect($this->fields())
-            ->map(function($field) {
-                return $field->fieldForUpdate();
-            })
-            ->filter()
-        ;
-    }
-
-    public function resourcesForIndex()
-    {
-        $query = $this->queryForIndex();
+        $query = $this->query();
 
         $models = $query->paginate(20);
 
@@ -306,67 +258,100 @@ class Resource
         return $result;
     }
 
-    public function resourceForDetail()
+    public function resourceNew($params)
     {
-        $query = $this->queryForDetail();
+        return $this->withModel(
+            (new ReflectionClass(
+                $this->modelClass()
+            ))
+                ->newInstance()
+        );
+    }
 
-        $model = $query->find($this->request->id);
+    public function resourceById($id)
+    {
+        $model = $this->queryForItem()->find($id);
+        return $model ? $this->withModel($model) : null;
+    }
 
-        if (!$model) {
-            return null;
+    /* fields */
+
+    public function fields()
+    {
+        return [];
+    }
+
+    public function resolveFields()
+    {
+        return collect($this->fields())
+            ->map(function(Field $field) {
+                return $field->resolveField();
+            })
+            ->filter()
+        ;
+    }
+
+    /* view */
+
+    public function vm($value, $errors = null)
+    {
+        return $this->resolveFields()->map(function(Field $field) use ($value, $errors) {
+            $field = $field->withResource($this);
+            $value = $field->union2value($value);
+            $errors = $errors ? $field->union2errors($errors) : null;
+            return $field->vm($value, $errors);
+        });
+    }
+
+    /* value */
+
+    public function value()
+    {
+        // dummy
+        if ($this->context() == 'create') {
+            $value = collect();
+            $this->resolveFields()->each(function(Field $field) use ($value) {
+                $value->union($field->value2union($field->dummy()));
+            });
+            return $value->toArray();
         }
 
-        $resource = $this->withModel($model);
-
-        return $resource;
+        // from model
+        $value = collect();
+        $this->resolveFields()->each(function(Field $field) use ($value) {
+            $value->union($field->value2union($field->model2value()));
+        });
+        return $value->toArray();
     }
 
-    public function vmForIndex()
+    /* store */
+
+    public function rules()
     {
-        return collect($this->fieldsForIndex())
-            ->map(function($field) {
-                return $field->withResource($this)->vm();
-            })
-        ;
+        $rules = collect();
+        $this->resolveFields()->each(function($field) use ($rules) {
+            $rules->union($field->rules2union());
+        });
+        return $rules->toArray();
     }
 
-    public function vmForDetail()
+    public function validate($value)
     {
-        return collect($this->fieldsForDetail())
-            ->map(function($field) {
-                return $field->withResource($this)->vm();
-            })
-        ;
+        $validator = validator($value, $this->rules());
+        return $validator->fails() ? $validator->errors() : null;
     }
 
-    public function queryForIndex()
+    public function store($value)
     {
-        return $this->query();
-    }
+        $errors = $this->validate($value);
+        if ($errors) {
+            return $errors;
+        }
 
-    public function queryForDetail()
-    {
-        return $this->query();
-    }
-
-    public function queryForCreate()
-    {
-        return $this->query();
-    }
-
-    public function queryForUpdate()
-    {
-        return $this->query();
-    }
-
-    public function queryForDelete()
-    {
-        return $this->query();
-    }
-
-    protected function query()
-    {
-        return call_user_func([$this->modelClass(), 'query']);
+        $this->resolveFields()->each(function(Field $field) use ($value) {
+            $field->value2model($field->union2value($value));
+        });
+        $this->model->save();
     }
 
 }

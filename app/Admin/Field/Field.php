@@ -3,6 +3,7 @@
 namespace App\Admin\Field;
 
 use App\Admin\Resource\Resource;
+use Illuminate\Support\Str;
 
 class Field
 {
@@ -15,11 +16,16 @@ class Field
     protected $name;
     protected $label;
     protected $view;
-    protected $showOnIndex = true;
-    protected $showOnCreate = true;
-    protected $showOnDetail = true;
-    protected $showOnUpdate = true;
+    protected $rules = [];
+    protected $rulesUsing;
+    protected $loadUsing;
+    protected $storeUsing;
+    protected $showOn = true;
+    protected $showUsing;
 
+    /**
+     * @return self
+     */
     public static function make()
     {
         return new static();
@@ -34,6 +40,21 @@ class Field
         $field = clone $this;
         $field->resource = $resource;
         return $field;
+    }
+
+    public function resource()
+    {
+        return $this->resource;
+    }
+
+    public function model()
+    {
+        return $this->model;
+    }
+
+    public function context()
+    {
+        return $this->resource()->context();
     }
 
     public function type($type = null)
@@ -63,48 +84,15 @@ class Field
         return $this;
     }
 
-    public function showOnAll($show = null)
+    public function showOn($contexts = [])
     {
         if (func_num_args() == 0) {
-            return $this->showOnIndex && $this->showOnCreate && $this->showOnDetail && $this->showOnUpdate;
+            return $this->showOn;
         }
-        $this->showOnIndex = $this->showOnCreate = $this->showOnDetail = $this->showOnUpdate = $show;
-        return $this;
-    }
+        $this->showOn = is_scalar($contexts)
+                      ? Str::of($contexts)->explode('|')->toArray()
+                      : $contexts;
 
-    public function showOnIndex($show = null)
-    {
-        if (func_num_args() == 0) {
-            return $this->showOnIndex;
-        }
-        $this->showOnIndex = $show;
-        return $this;
-    }
-
-    public function showOnCreate($show = null)
-    {
-        if (func_num_args() == 0) {
-            return $this->showOnCreate;
-        }
-        $this->showOnCreate = $show;
-        return $this;
-    }
-
-    public function showOnDetail($show = null)
-    {
-        if (func_num_args() == 0) {
-            return $this->showOnDetail;
-        }
-        $this->showOnDetail = $show;
-        return $this;
-    }
-
-    public function showOnUpdate($show = null)
-    {
-        if (func_num_args() == 0) {
-            return $this->showOnU;
-        }
-        $this->showOnU = $show;
         return $this;
     }
 
@@ -117,60 +105,111 @@ class Field
         return $this;
     }
 
-    public function vm()
+    public function vm($value, $errors)
     {
         return [
+            'context' => $this->context(),
             'view' => $this->view(),
             'type' => $this->type(),
             'name' => $this->name(),
             'label' => $this->label(),
-            'value' => $this->value(),
+            'value' => $value,
+            'errors' => $errors,
         ];
     }
 
-    public function fieldForIndex()
+    public function resolveField()
     {
-        return $this->showOnIndex() ? clone $this : null;
+        if ($this->showUsing) {
+            return call_user_func($this->showUsing, $this) ? clone $this : null;
+        }
+        return
+            $this->showOn === true || in_array($this->context(), $this->showOn)
+            ? clone $this
+            : null;
     }
 
-    public function fieldForCreate()
+    /* value */
+
+    public function loadUsing($callback)
     {
-        return $this->showOnCreate() ? clone $this : null;
+        $this->loadUsing = $callback;
+        return $this;
     }
 
-    public function fieldForDetail()
+    public function storeUsing($callback)
     {
-        return $this->showOnDetail() ? clone $this : null;
+        $this->storeUsing = $callback;
+        return $this;
     }
 
-    public function fieldForUpdate()
+    public function dummy()
     {
-        return $this->showOnUpdate() ? clone $this : null;
+        return null;
     }
 
-    public function value()
+    public function model2value()
     {
-        return $this->resource->model()->{$this->name()};
+        if ($this->loadUsing) {
+            return call_user_func($this->loadUsing, $this);
+        }
+        return $this->model()->{$this->name()};
+    }
+
+    public function value2model($value)
+    {
+        if ($this->storeUsing) {
+            call_user_func($this->storeUsing, $this, $value);
+            return;
+        }
+        $this->model()->{$this->name()} = $value;
+    }
+
+    public function value2union($value)
+    {
+        return [$this->name() => $value];
+    }
+
+    public function union2value($union)
+    {
+        return $union[$this->name()];
+    }
+
+    /* error */
+
+    public function union2errors($union)
+    {
+        return $union[$this->name()];
+    }
+
+    /* rules */
+
+    public function rules($rules = null)
+    {
+        if (func_num_args() == 0) {
+            return $this->rules;
+        }
+        $this->rules = $rules;
+        return $this;
+    }
+
+    public function rulesUsing($callback)
+    {
+        $this->rulesUsing = $callback;
+        return $this;
+    }
+
+    public function resolveRules()
+    {
+        if ($this->rulesUsing) {
+            return call_user_func($this->rulesUsing, $this);
+        }
+        return $this->rules();
+    }
+
+    public function rules2union()
+    {
+        return [$this->name() => $this->resolveRules()];
     }
 
 }
-
-
-/**
- * label
- * sortable
- * readonly
- * required
- * rules
- * rulesForCreate
- * rulesForUpdate
- * view
- *
- * post, entity, form
- * post2form, entity2form, form2entity // bo validacja form
- *
- * request model view
- * request == view
- * request2model
- * model2request
-
