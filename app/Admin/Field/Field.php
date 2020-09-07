@@ -49,7 +49,7 @@ class Field
 
     public function model()
     {
-        return $this->model;
+        return $this->resource()->model();
     }
 
     public function context()
@@ -93,6 +93,12 @@ class Field
                       ? Str::of($contexts)->explode('|')->toArray()
                       : $contexts;
 
+        return $this;
+    }
+
+    public function showUsing($callback)
+    {
+        $this->showUsing = $callback;
         return $this;
     }
 

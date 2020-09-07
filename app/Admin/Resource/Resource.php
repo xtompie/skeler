@@ -260,7 +260,7 @@ class Resource
 
     public function resourceById($id)
     {
-        $model = $this->queryForItem()->find($id);
+        $model = $this->query()->find($id);
         return $model ? $this->withModel($model) : null;
     }
 
@@ -274,6 +274,10 @@ class Resource
     public function resolveFields()
     {
         return collect($this->fields())
+            ->filter()
+            ->map(function(Field $field) {
+                return $field->withResource($this);
+            })
             ->map(function(Field $field) {
                 return $field->resolveField();
             })
@@ -290,7 +294,7 @@ class Resource
             $value = $field->union2value($value);
             $errors = $errors ? $field->union2errors($errors) : null;
             return $field->vm($value, $errors);
-        });
+        })->toArray();
     }
 
     /* value */
@@ -299,30 +303,30 @@ class Resource
     {
         // dummy
         if ($this->context() == 'create') {
-            $value = collect();
-            $this->resolveFields()->each(function(Field $field) use ($value) {
-                $value->union($field->value2union($field->dummy()));
+            $value = [];
+            $this->resolveFields()->each(function(Field $field) use (&$value) {
+                $value = array_merge($value, $field->value2union($field->dummy()));
             });
-            return $value->toArray();
+            return $value;
         }
 
         // from model
-        $value = collect();
-        $this->resolveFields()->each(function(Field $field) use ($value) {
-            $value->union($field->value2union($field->model2value()));
+        $value = [];
+        $this->resolveFields()->each(function(Field $field) use (&$value) {
+            $value = array_merge($value, $field->value2union($field->model2value()));
         });
-        return $value->toArray();
+        return $value;
     }
 
     /* store */
 
     public function rules()
     {
-        $rules = collect();
-        $this->resolveFields()->each(function($field) use ($rules) {
-            $rules->union($field->rules2union());
+        $rules = [];
+        $this->resolveFields()->each(function($field) use (&$rules) {
+            $rules = array_merge($rules, $field->rules2union());
         });
-        return $rules->toArray();
+        return $rules;
     }
 
     public function validate($value)

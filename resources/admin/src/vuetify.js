@@ -7,6 +7,7 @@ import {
   VMain,
   VNavigationDrawer,
   VRow,
+  VSimpleTable,
   VSwitch,
   VToolbarTitle,
 } from 'vuetify/lib';
@@ -20,6 +21,7 @@ export default {
   VMain,
   VNavigationDrawer,
   VRow,
+  VSimpleTable,
   VSwitch,
   VToolbarTitle,
 }

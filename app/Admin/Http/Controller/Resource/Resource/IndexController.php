@@ -38,9 +38,6 @@ class IndexController extends Controller
             }),
         ];
 
-        dump($vm);
-        dd(__METHOD__);
-
         return view($vm['view'], $vm);
     }
 

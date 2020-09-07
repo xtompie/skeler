@@ -13,11 +13,11 @@ class Page extends Resource
         return [
             ID::make(),
             Text::make()->name('title')->label('Title')
-                ->showUsing(function(ID $field) {
-                    return $field->model()->type == 'some value';
-                })
-                ->showOn('index|detail')
-                ->showOn(['index', 'detail'])
+                // ->showUsing(function(ID $field) {
+                //     return $field->model()->type == 'some value';
+                // })
+                // ->showOn('index|detail')
+                // ->showOn(['index', 'detail'])
                 ,
         ];
     }
