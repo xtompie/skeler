@@ -57,6 +57,10 @@ class Field
         return $this->resource()->context();
     }
 
+    /**
+     * @param String $type
+     * @return self
+     */
     public function type($type = null)
     {
         if (func_num_args() == 0) {
@@ -66,6 +70,10 @@ class Field
         return $this;
     }
 
+    /**
+     * @param String $type
+     * @return self
+     */
     public function name($name = null)
     {
         if (func_num_args() == 0) {
@@ -75,6 +83,10 @@ class Field
         return $this;
     }
 
+    /**
+     * @param String $type
+     * @return self
+     */
     public function label($label = null)
     {
         if (func_num_args() == 0) {
@@ -89,10 +101,7 @@ class Field
         if (func_num_args() == 0) {
             return $this->showOn;
         }
-        $this->showOn = is_scalar($contexts)
-                      ? Str::of($contexts)->explode('|')->toArray()
-                      : $contexts;
-
+        $this->showOn = $contexts;
         return $this;
     }
 
@@ -129,10 +138,18 @@ class Field
         if ($this->showUsing) {
             return call_user_func($this->showUsing, $this) ? clone $this : null;
         }
-        return
-            $this->showOn === true || in_array($this->context(), $this->showOn)
-            ? clone $this
-            : null;
+
+        if ($this->showOn === true) {
+            return clone $this;
+        }
+
+        $showOn = is_array($this->showOn) ? $this->showOn : Str::of($this->showOn)->explode('|')->toArray();
+
+        if (in_array($this->context(), $showOn)) {
+            return clone $this;
+        }
+
+        return null;
     }
 
     /* value */

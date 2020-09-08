@@ -153,29 +153,29 @@ class Resource
     public function redirect()
     {
         if ($this->context() == 'create') {
-            $this->redirectForCreate();
+            return $this->redirectForCreate();
         }
         if ($this->context() == 'update') {
-            $this->redirectForUpdate();
+            return $this->redirectForUpdate();
         }
         if ($this->context() == 'delete') {
-            $this->redirectForDelete();
+            return $this->redirectForDelete();
         }
     }
 
     public function redirectForCreate()
     {
-        redirect()->route("admin.resource.{$this->name()}.update", ['id' => $this->id()]);
+        return redirect()->route("admin.resource.{$this->name()}.update", ['id' => $this->id()]);
     }
 
     public function redirectForUpdate()
     {
-        redirect()->route("admin.resource.{$this->name()}.update", ['id' => $this->id()]);
+        return redirect()->route("admin.resource.{$this->name()}.update", ['id' => $this->id()]);
     }
 
     public function redirectForDelete()
     {
-        redirect()->route("admin.resource.{$this->name()}.index");
+        return redirect()->route("admin.resource.{$this->name()}.index");
     }
 
     /* acl */
@@ -332,7 +332,7 @@ class Resource
     public function validate($value)
     {
         $validator = validator($value, $this->rules());
-        return $validator->fails() ? $validator->errors() : null;
+        return $validator->fails() ? $validator->errors()->toArray() : null;
     }
 
     public function store($value)
@@ -341,7 +341,6 @@ class Resource
         if ($errors) {
             return $errors;
         }
-
         $this->resolveFields()->each(function(Field $field) use ($value) {
             $field->value2model($field->union2value($value));
         });

@@ -41,11 +41,12 @@ class UpdateController extends Controller
 
         // vm
         $vm = [
+            'name' => $resource->name(),
             'context' => $resource->context(),
             'view' => 'admin.resource.resource.update',
             'value' => $value,
             'errors' => $errors,
-            'resource' => $resource->vm($value, $errors),
+            'vm' => $resource->vm($value, $errors),
         ];
 
         dump($vm);

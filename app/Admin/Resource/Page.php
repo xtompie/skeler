@@ -12,7 +12,7 @@ class Page extends Resource
     {
         return [
             ID::make(),
-            Text::make()->name('title')->label('Title')
+            Text::make()->name('title')->label('Title')->rules('min:2')
                 // ->showUsing(function(ID $field) {
                 //     return $field->model()->type == 'some value';
                 // })

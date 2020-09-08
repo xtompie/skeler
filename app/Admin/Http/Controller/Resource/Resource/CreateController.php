@@ -33,21 +33,19 @@ class CreateController extends Controller
         if (request()->isMethod('post')) {
             $errors = $resource->store($value);
             if (!$errors) {
-                $resource->redirect();
+                return $resource->redirect();
             }
         }
 
         // vm
         $vm = [
+            'name' => $resource->name(),
             'context' => $resource->context(),
             'view' => 'admin.resource.resource.create',
             'value' => $value,
             'errors' => $errors,
-            'resource' => $resource->vm($value, $errors),
+            'vm' => $resource->vm($value, $errors),
         ];
-
-        dump($vm);
-        dd(__METHOD__);
 
         return view($vm['view'], $vm);
     }

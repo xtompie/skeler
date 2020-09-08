@@ -1,5 +1,4 @@
 import Vue from 'vue'
-import Vuetify from './Vuetify/src/Vuetify'
 
 Vue.config.productionTip = false
 Vue.config.devtools = true
@@ -8,18 +7,11 @@ Vue.config.silent = true
 // style
 import "./style.scss";
 
-// plugins
-Object.values(require('./plugins.js').default).forEach((plugin) => Vue.use(plugin));
-
 // App
-const App = {components: {}};
+const App = {};
 
 // components
-App.components = {...require('./components.js').default, ...App.components};
-
-// vuetify
-App.vuetify = Vuetify;
-App.components = {...require('./vuetify.js').default, ...App.components};
+App.components = require('./components.js').default;
 
 // sanbox
 if (process.env.NODE_ENV == "development") {

@@ -1,8 +1,7 @@
 @extends('admin.layout.default')
 
 @section('content')
-<v-simple-table>
-    <template v-slot:default>
+    <table class="table">
         <thead>
             <tr>
                 @foreach ($labels as $label)
@@ -13,9 +12,9 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($resources as $fields)
+            @foreach ($vm as $item)
                 <tr>
-                    @foreach ($fields as $field)
+                    @foreach ($item as $field)
                         <td>
                             @include($field['view'], $field)
                         </td>
@@ -23,6 +22,5 @@
                 </tr>
             @endforeach
         </tbody>
-    </template>
-</v-simple-table>
+    </table>
 @endsection

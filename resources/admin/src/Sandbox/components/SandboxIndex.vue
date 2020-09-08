@@ -10,7 +10,7 @@
 import routes from '../../sandbox.js'
 
 export default {
-  data: () => {
+  data: () => { 
     return {routes: routes.routes}
   }
 }
