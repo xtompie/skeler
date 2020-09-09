@@ -27,19 +27,14 @@ class IndexController extends Controller
 
         // vm
         $vm = [
-            'name' => $resource->name(),
-            'context' => $resource->context(),
-            'view' => 'admin.resource.resource.index',
-            'labels' => $resource->resolveFields()->map(function($field) {
-                return $field->label();
-            }),
+            'resource' => $resource->vm(),
             'pagination' => $index['models'],
-            'vm' => $index['resources']->map(function(Resource $resource) {
-                return $resource->vm($resource->value());
+            'resources' => $index['resources']->map(function(Resource $resource) {
+                return $resource->vm();
             }),
         ];
 
-        return view($vm['view'], $vm);
+        return view('admin.resource.resource.index', $vm);
     }
 
 }

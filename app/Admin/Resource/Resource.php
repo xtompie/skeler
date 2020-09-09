@@ -204,7 +204,7 @@ class Resource
 
     public function id()
     {
-        return $this->model->id;
+        return optional($this->model)->id;
     }
 
     public function title()
@@ -227,6 +227,41 @@ class Resource
     {
         return null;
     }
+
+    public function actions()
+    {
+        if (!$this->id()) {
+            return [
+                [
+                    'name' => 'index',
+                    'url' => route("admin.resource.{$this->name()}.index"),
+                ],
+                [
+                    'name' => 'create',
+                    'url' => route("admin.resource.{$this->name()}.create"),
+                ],
+            ];
+        }
+
+        return [
+            [
+                'name' => 'index',
+                'url' => route("admin.resource.{$this->name()}.index"),
+            ],
+            [
+                'name' => 'detail',
+                'url' => route("admin.resource.{$this->name()}.detail", ['id' => $this->id()]),
+            ],
+            [
+                'name' => 'update',
+                'url' => route("admin.resource.{$this->name()}.update", ['id' => $this->id()]),
+            ],
+            [
+                'name' => 'delete',
+                'url' => route("admin.resource.{$this->name()}.delete", ['id' => $this->id()]),
+            ],
+        ];
+}
 
     /* query */
 
@@ -287,14 +322,35 @@ class Resource
 
     /* view */
 
-    public function vm($value, $errors = null)
+    public function vm($value = null, $errors = null)
     {
-        return $this->resolveFields()->map(function(Field $field) use ($value, $errors) {
-            $field = $field->withResource($this);
-            $value = $field->union2value($value);
-            $errors = $errors ? $field->union2errors($errors) : null;
-            return $field->vm($value, $errors);
-        })->toArray();
+        // no model
+        if (!$this->model) {
+            return collect([
+                'name' => $this->name(),
+                'context' => $this->context(),
+                'labels' => $this->resolveFields()->map(function(Field $field) {
+                    return $field->label();
+                }),
+                'actions' => $this->actions(),
+            ])->toArray();
+        }
+
+        // model
+        $value = func_num_args() > 0 ? $value : $this->value();
+        return collect([
+            'id' => $this->id(),
+            'title' => $this->title(),
+            'name' => $this->name(),
+            'context' => $this->context(),
+            'fields' => $this->resolveFields()->map(function(Field $field) use ($value, $errors) {
+                $field = $field->withResource($this);
+                $field = $field->withUnionValue($value);
+                $field = $errors ? $field->withUnionErrors($errors) : $field;
+                return $field->vm();
+            })->toArray(),
+            'actions' => $this->actions(),
+        ])->toArray();
     }
 
     /* value */
@@ -318,7 +374,7 @@ class Resource
         return $value;
     }
 
-    /* store */
+    /* save */
 
     public function rules()
     {
@@ -345,6 +401,11 @@ class Resource
             $field->value2model($field->union2value($value));
         });
         $this->model->save();
+    }
+
+    public function delete()
+    {
+        $this->model->delete();
     }
 
 }

@@ -34,18 +34,10 @@ class DeleteController extends Controller
 
         // vm
         $vm = [
-            'name' => $resource->name(),
-            'context' => $resource->context(),
-            'view' => 'admin.resource.resource.delete',
-            'id' => $resource->id(),
-            'title' => $resource->title(),
-            'vm' => $resource->vm($resource->value()),
+            'resource' => $resource->vm(),
         ];
 
-        dump($vm);
-        dd(__METHOD__);
-
-        return view($vm['view'], $vm);
+        return view('admin.resource.resource.delete', $vm);
     }
 
 }

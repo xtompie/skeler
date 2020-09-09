@@ -28,15 +28,10 @@ class DetailController extends Controller
 
         // vm
         $vm = [
-            'name' => $resource->name(),
-            'context' => $resource->context(),
-            'view' => 'admin.resource.resource.detail',
-            'id' => $resource->id(),
-            'title' => $resource->title(),
-            'vm' => $resource->vm($resource->value()),
+            'resource' => $resource->vm(),
         ];
 
-        return view($vm['view'], $vm);
+        return view('admin.resource.resource.detail', $vm);
     }
 
 }

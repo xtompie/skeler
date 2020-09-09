@@ -12,6 +12,8 @@ class Field
      * @var App\Admin\Resource\Resource $resource
      */
     protected $resource;
+    protected $value;
+    protected $errors;
     protected $type;
     protected $name;
     protected $label;
@@ -39,6 +41,20 @@ class Field
     {
         $field = clone $this;
         $field->resource = $resource;
+        return $field;
+    }
+
+    public function withUnionValue($union)
+    {
+        $field = clone $this;
+        $field->value = $this->union2value($union);
+        return $field;
+    }
+
+    public function withUnionErrors($union)
+    {
+        $field = clone $this;
+        $field->errors = $this->union2errors($union);
         return $field;
     }
 
@@ -120,7 +136,7 @@ class Field
         return $this;
     }
 
-    public function vm($value, $errors)
+    public function vm()
     {
         return [
             'context' => $this->context(),
@@ -128,8 +144,8 @@ class Field
             'type' => $this->type(),
             'name' => $this->name(),
             'label' => $this->label(),
-            'value' => $value,
-            'errors' => $errors,
+            'value' => $this->value(),
+            'errors' => $this->errors(),
         ];
     }
 
@@ -153,6 +169,11 @@ class Field
     }
 
     /* value */
+
+    protected function value()
+    {
+        return $this->value;
+    }
 
     public function loadUsing($callback)
     {
@@ -200,9 +221,14 @@ class Field
 
     /* error */
 
+    protected function errors()
+    {
+        return $this->errors;
+    }
+
     public function union2errors($union)
     {
-        return $union[$this->name()];
+        return $union[$this->name()] ?? null;
     }
 
     /* rules */

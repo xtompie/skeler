@@ -13,15 +13,15 @@
     <div class="form-group row">
         <label class="col-sm-2 col-form-label">{{ $label }}</label>
         <div class="col-sm-10">
-            <input
-                type="text"
+            <textarea
                 name="{{ $name }}"
-                value="{{ $value }}"
                 class="
                     form-control
                     {{ $errors ? 'is-invalid' : ''}}
                 "
-            />
+                cols="{{ $cols }}"
+                rows="{{ $rows }}"
+            >{{ $value }}</textarea>
             @include('admin.common.errors', ['errors' => $errors])
         </div>
     </div>

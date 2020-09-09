@@ -2,7 +2,7 @@
 
 @section('content')
 
-    <h1>Create</h1>
+    <h1>#{{ $resource['id'] }} {{ $resource['title'] }}</h1>
 
     @include('admin.common.actions', $resource)
 
@@ -14,7 +14,7 @@
         @include('admin.common.submits', [
             'name' => $resource['name'],
             'context' => $resource['context'],
+            'id' => $resource['id'],
         ])
     </form>
-
 @endsection

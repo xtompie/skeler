@@ -41,18 +41,12 @@ class UpdateController extends Controller
 
         // vm
         $vm = [
-            'name' => $resource->name(),
-            'context' => $resource->context(),
-            'view' => 'admin.resource.resource.update',
             'value' => $value,
             'errors' => $errors,
-            'vm' => $resource->vm($value, $errors),
+            'resource' => $resource->vm($value, $errors),
         ];
 
-        dump($vm);
-        dd(__METHOD__);
-
-        return view($vm['view'], $vm);
+        return view('admin.resource.resource.update', $vm);
     }
 
 }

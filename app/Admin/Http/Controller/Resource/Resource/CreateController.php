@@ -39,15 +39,12 @@ class CreateController extends Controller
 
         // vm
         $vm = [
-            'name' => $resource->name(),
-            'context' => $resource->context(),
-            'view' => 'admin.resource.resource.create',
             'value' => $value,
             'errors' => $errors,
-            'vm' => $resource->vm($value, $errors),
+            'resource' => $resource->vm($value, $errors),
         ];
 
-        return view($vm['view'], $vm);
+        return view('admin.resource.resource.create', $vm);
     }
 
 }
