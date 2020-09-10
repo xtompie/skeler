@@ -3,10 +3,21 @@
 namespace App\Admin\Field;
 
 use App\Admin\Resource\Resource;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class Field
 {
+
+    /* static */
+
+    /**
+     * @return static
+     */
+    public static function make()
+    {
+        return new static();
+    }
 
     /**
      * @var App\Admin\Resource\Resource $resource
@@ -18,24 +29,18 @@ class Field
     protected $name;
     protected $label;
     protected $view;
+    protected $dummy;
     protected $loadUsing;
     protected $storeUsing;
     protected $showUsing;
-    protected $showOn = true;
-    protected $rules = [];
-    protected $rulesUsing;
+    protected $enableOn = ['detail', 'create', 'update'];
+    protected $rules;
 
-    /**
-     * @return self
-     */
-    public static function make()
-    {
-        return new static();
-    }
+    /* mutables */
 
     /**
      * @param Resource $resource
-     * @return self
+     * @return static
      */
     public function withResource(Resource $resource)
     {
@@ -44,19 +49,35 @@ class Field
         return $field;
     }
 
-    public function withUnionValue($union)
+    public function withValue($value)
     {
         $field = clone $this;
-        $field->value = $this->union2value($union);
+        $field->value = $this->unpack($value);
         return $field;
     }
 
-    public function withUnionErrors($union)
+    public function withDummy()
     {
         $field = clone $this;
-        $field->errors = $this->union2errors($union);
+        $field->value = $this->resolveDummy();
         return $field;
     }
+
+    public function withLoad()
+    {
+        $field = clone $this;
+        $field->value = $this->load();
+        return $field;
+    }
+
+    public function withErrors($errors)
+    {
+        $field = clone $this;
+        $field->errors = $this->unpack($errors);
+        return $field;
+    }
+
+    /* properties */
 
     public function resource()
     {
@@ -75,7 +96,7 @@ class Field
 
     /**
      * @param String $type
-     * @return self
+     * @return static
      */
     public function type($type = null)
     {
@@ -88,7 +109,7 @@ class Field
 
     /**
      * @param String $type
-     * @return self
+     * @return static
      */
     public function name($name = null)
     {
@@ -101,7 +122,7 @@ class Field
 
     /**
      * @param String $type
-     * @return self
+     * @return static
      */
     public function label($label = null)
     {
@@ -112,20 +133,41 @@ class Field
         return $this;
     }
 
-    public function showOn($contexts = [])
+    /**
+     * @param String|\Closure $type
+     * @return static
+     */
+    public function enableOn($contexts = [])
     {
         if (func_num_args() == 0) {
-            return $this->showOn;
+            return $this->enableOn;
         }
-        $this->showOn = $contexts;
+        $this->enableOn = is_string($contexts) ? explode('|', $contexts) : $contexts;
         return $this;
     }
 
-    public function showUsing($callback)
+    public function enableOnIndex()
     {
-        $this->showUsing = $callback;
+        $this->enableOn = collect($this->enableOn)->add('index')->unique()->toArray();
         return $this;
     }
+
+    public function hideOnDetail()
+    {
+        $this->enableOn = collect($this->enableOn)->reject(function($i) { return $i == 'detail'; })->toArray();
+        return $this;
+    }
+
+    public function resolveField()
+    {
+        if ($this->enableOn instanceof \Closure ) {
+            return call_user_func($this->enableOn, $this) ? clone $this : null;
+        }
+
+        return in_array($this->context(), $this->enableOn) ? clone $this : null;
+    }
+
+    /* view */
 
     public function view($view = null)
     {
@@ -149,30 +191,37 @@ class Field
         ];
     }
 
-    public function resolveField()
-    {
-        if ($this->showUsing) {
-            return call_user_func($this->showUsing, $this) ? clone $this : null;
-        }
-
-        if ($this->showOn === true) {
-            return clone $this;
-        }
-
-        $showOn = is_array($this->showOn) ? $this->showOn : Str::of($this->showOn)->explode('|')->toArray();
-
-        if (in_array($this->context(), $showOn)) {
-            return clone $this;
-        }
-
-        return null;
-    }
-
     /* value */
 
     protected function value()
     {
         return $this->value;
+    }
+
+    public function dummyDefault()
+    {
+        return null;
+    }
+
+    public function dummy($dummy = null)
+    {
+        if (func_num_args() === 0) {
+            return $this->dummy;
+        }
+
+        $this->dummy = $dummy;
+        return null;
+    }
+
+    public function resolveDummy()
+    {
+        $dummy = $this->dummy() ?: $this->dummyDefault();
+
+        if ($dummy instanceof \Closure) {
+            $dummy = call_user_func($dummy, $this);
+        }
+
+        return $dummy;
     }
 
     public function loadUsing($callback)
@@ -181,18 +230,7 @@ class Field
         return $this;
     }
 
-    public function storeUsing($callback)
-    {
-        $this->storeUsing = $callback;
-        return $this;
-    }
-
-    public function dummy()
-    {
-        return null;
-    }
-
-    public function model2value()
+    public function load()
     {
         if ($this->loadUsing) {
             return call_user_func($this->loadUsing, $this);
@@ -200,23 +238,25 @@ class Field
         return $this->model()->{$this->name()};
     }
 
-    public function value2model($value)
+
+    public function storeUsing($callback)
+    {
+        $this->storeUsing = $callback;
+        return $this;
+    }
+
+    public function store()
     {
         if ($this->storeUsing) {
-            call_user_func($this->storeUsing, $this, $value);
+            call_user_func($this->storeUsing, $this);
             return;
         }
-        $this->model()->{$this->name()} = $value;
+        $this->model()->{$this->name()} = $this->value();
     }
 
-    public function value2union($value)
+    public function valuePack()
     {
-        return [$this->name() => $value];
-    }
-
-    public function union2value($union)
-    {
-        return $union[$this->name()];
+        return $this->pack($this->value());
     }
 
     /* error */
@@ -224,11 +264,6 @@ class Field
     protected function errors()
     {
         return $this->errors;
-    }
-
-    public function union2errors($union)
-    {
-        return $union[$this->name()] ?? null;
     }
 
     /* rules */
@@ -242,23 +277,29 @@ class Field
         return $this;
     }
 
-    public function rulesUsing($callback)
-    {
-        $this->rulesUsing = $callback;
-        return $this;
-    }
-
     public function resolveRules()
     {
-        if ($this->rulesUsing) {
-            return call_user_func($this->rulesUsing, $this);
+        if ($this->rules instanceof \Closure) {
+            return call_user_func($this->rules, $this);
         }
-        return $this->rules();
+        return $this->rules;
     }
 
-    public function rules2union()
+    public function rulesPack()
     {
-        return [$this->name() => $this->resolveRules()];
+        return $this->pack($this->resolveRules());
+    }
+
+    /* pack */
+
+    public function pack($subject)
+    {
+        return $subject === null? [] : [$this->name() => $subject];
+    }
+
+    public function unpack($struct)
+    {
+        return $struct[$this->name()] ?? null;
     }
 
 }

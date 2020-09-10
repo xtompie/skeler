@@ -4,6 +4,7 @@ namespace App\Admin\Resource;
 
 use App\Admin\Field\Field;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use \ReflectionClass;
@@ -228,40 +229,63 @@ class Resource
         return null;
     }
 
+    /**
+     * Actions
+     *
+     * @return void
+     */
+
     public function actions()
     {
         if (!$this->id()) {
-            return [
-                [
-                    'name' => 'index',
-                    'url' => route("admin.resource.{$this->name()}.index"),
-                ],
-                [
-                    'name' => 'create',
-                    'url' => route("admin.resource.{$this->name()}.create"),
-                ],
-            ];
+            return
+                $this->actionIndex()
+                + $this->actionCreate()
+            ;
         }
 
+        return
+            $this->actionIndex()
+            + $this->actionDetail()
+            + $this->actionUpdate()
+            + $this->actionDuplicate()
+            + $this->actionDelete()
+        ;
+    }
+
+    public function actionIndex()
+    {
+        return ['index' => route("admin.resource.{$this->name()}.index")];
+    }
+
+    public function actionCreate()
+    {
+        return ['create' => route("admin.resource.{$this->name()}.create")];
+    }
+
+    public function actionDuplicate()
+    {
         return [
-            [
-                'name' => 'index',
-                'url' => route("admin.resource.{$this->name()}.index"),
-            ],
-            [
-                'name' => 'detail',
-                'url' => route("admin.resource.{$this->name()}.detail", ['id' => $this->id()]),
-            ],
-            [
-                'name' => 'update',
-                'url' => route("admin.resource.{$this->name()}.update", ['id' => $this->id()]),
-            ],
-            [
-                'name' => 'delete',
-                'url' => route("admin.resource.{$this->name()}.delete", ['id' => $this->id()]),
-            ],
+            'duplicate' =>
+                route("admin.resource.{$this->name()}.create")
+                . '?' . Arr::query(['duplicate' => $this->id()])
         ];
-}
+    }
+
+    public function actionDetail()
+    {
+        return ['detail' => route("admin.resource.{$this->name()}.detail", ['id' => $this->id()])];
+    }
+
+    public function actionUpdate()
+    {
+        return ['update' => route("admin.resource.{$this->name()}.update", ['id' => $this->id()])];
+    }
+
+    public function actionDelete()
+    {
+        return ['delete' => route("admin.resource.{$this->name()}.delete", ['id' => $this->id()])];
+    }
 
     /* query */
 
@@ -288,13 +312,23 @@ class Resource
 
     public function resourceNew($params)
     {
-        return $this->withModel(
-            (new ReflectionClass($this->modelClass()))->newInstance()
-        );
+        $model = (new ReflectionClass($this->modelClass()))->newInstance();
+        $resource = $this->withModel($model);
+        // if (array_key_exists('duplicate', $params)) {
+        //     $duplicate = $resource->resourceById($params['duplicate']);
+        //     if ($duplicate) {
+        //         $resource = $resource->withValue()
+        //     }
+        //     $resource = $resource->resourceById()
+        // }
+
+        return $resource;
+
     }
 
     public function resourceById($id)
     {
+        /** create ->withId(), use it here and in resource New in duplicate */
         $model = $this->query()->find($id);
         return $model ? $this->withModel($model) : null;
     }
@@ -311,10 +345,7 @@ class Resource
         return collect($this->fields())
             ->filter()
             ->map(function(Field $field) {
-                return $field->withResource($this);
-            })
-            ->map(function(Field $field) {
-                return $field->resolveField();
+                return $field->withResource($this)->resolveField();
             })
             ->filter()
         ;
@@ -344,9 +375,8 @@ class Resource
             'name' => $this->name(),
             'context' => $this->context(),
             'fields' => $this->resolveFields()->map(function(Field $field) use ($value, $errors) {
-                $field = $field->withResource($this);
-                $field = $field->withUnionValue($value);
-                $field = $errors ? $field->withUnionErrors($errors) : $field;
+                $field = $field->withResource($this)->withValue($value);
+                $field = $errors ? $field->withErrors($errors) : $field;
                 return $field->vm();
             })->toArray(),
             'actions' => $this->actions(),
@@ -361,7 +391,7 @@ class Resource
         if ($this->context() == 'create') {
             $value = [];
             $this->resolveFields()->each(function(Field $field) use (&$value) {
-                $value = array_merge($value, $field->value2union($field->dummy()));
+                $value = array_merge($value, $field->withDummy()->valuePack());
             });
             return $value;
         }
@@ -369,7 +399,7 @@ class Resource
         // from model
         $value = [];
         $this->resolveFields()->each(function(Field $field) use (&$value) {
-            $value = array_merge($value, $field->value2union($field->model2value()));
+            $value = array_merge($value, $field->withLoad()->valuePack());
         });
         return $value;
     }
@@ -379,8 +409,8 @@ class Resource
     public function rules()
     {
         $rules = [];
-        $this->resolveFields()->each(function($field) use (&$rules) {
-            $rules = array_merge($rules, $field->rules2union());
+        $this->resolveFields()->each(function(Field $field) use (&$rules) {
+            $rules = array_merge($rules, $field->rulesPack());
         });
         return $rules;
     }
@@ -398,7 +428,7 @@ class Resource
             return $errors;
         }
         $this->resolveFields()->each(function(Field $field) use ($value) {
-            $field->value2model($field->union2value($value));
+            $field->withValue($value)->store();
         });
         $this->model->save();
     }

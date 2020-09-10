@@ -11,7 +11,7 @@ class Textarea extends Field
 
     /**
      * @param string $cols
-     * @return self
+     * @return static
      */
     public function cols($cols)
     {
@@ -21,7 +21,7 @@ class Textarea extends Field
 
     /**
      * @param string $cols
-     * @return self
+     * @return static
      */
     public function rows($rows)
     {

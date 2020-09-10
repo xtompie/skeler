@@ -1,5 +1,5 @@
 @if ($actions)
-    @foreach ($actions as $action)
-        <a class="btn btn-link" href="{{ $action['url'] }}">{{ $action['name'] }}</a>
+    @foreach ($actions as $name => $url)
+        <a class="btn btn-link" href="{{ $url }}">{{ $name }}</a>
     @endforeach
 @endif

@@ -8,7 +8,7 @@ class ID extends Field
     protected $type = 'id';
     protected $name = 'id';
     protected $label = 'ID';
-    protected $showOn = 'index|detail';
+    protected $enableOn = ['index', 'detail'];
 
 
     public function value2model($value)
