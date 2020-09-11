@@ -1,7 +1,10 @@
 @extends('admin.layout.default')
 
 @section('content')
-    <h1>{{ $resource['name'] }}</h1>
+
+    @include('admin.common.breadcrumb', $resource)
+
+    <h1>{{ ucfirst($resource['name']) }}</h1>
 
     @include('admin.common.actions', $resource)
 

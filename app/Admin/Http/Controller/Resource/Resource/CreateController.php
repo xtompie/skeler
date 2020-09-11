@@ -18,9 +18,7 @@ class CreateController extends Controller
 
         $resource = $resource->resourceNew();
 
-        $resource = request()->isMethod('post') 
-                 ? $resource->withRequestValue()
-                 : $resource->withDummy();
+        $resource = request()->isMethod('post') ? $resource->withRequestValue() : $resource;
 
         if (request()->isMethod('post')) {
             $resource = $resource->store();

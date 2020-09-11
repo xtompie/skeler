@@ -23,25 +23,33 @@ class Page extends Resource
     public function actions()
     {
         $actions = parent::actions();
-        if ($this->id()) {
-            $actions += $this->actionDummy();
+        if ($this->id() && !$this->isContext('delete')) {
+            $actions[] = $this->actionDummy();
         }
         return $actions;
+    }
+
+    public function resourceNew()
+    {
+        if ($this->request()->has('dummy')) {
+            return $this->withNewModel()->withValue($this->request()->get('dummy'));
+        }
+
+        return parent::resourceNew();
     }
 
     protected function actionDummy()
     {
         return [
-            'dummy' =>
-                route("admin.resource.{$this->name()}.create")
-                . '?' . Arr::query(['dummy' => $this->actionDummyValue()])
+            'name' => 'dummy',
+            'url' => route("admin.resource.{$this->name()}.create") . '?' . Arr::query(['dummy' => $this->actionDummyValue()]),
         ];
     }
 
     protected function actionDummyValue()
     {
         return [
-            'title' => 'XD'
+            'title' => 'XD',
         ];
     }
 

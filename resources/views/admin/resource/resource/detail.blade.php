@@ -2,6 +2,8 @@
 
 @section('content')
 
+    @include('admin.common.breadcrumb', $resource)
+
     <h1>#{{ $resource['id'] }} {{ $resource['title'] }}</h1>
 
     @include('admin.common.actions', $resource)

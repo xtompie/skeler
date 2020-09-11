@@ -18,9 +18,7 @@ class UpdateController extends Controller
         $resource = $resource->withId($id);
         abort_unless($resource, 404);
 
-        $resource = request()->isMethod('post') 
-                  ? $resource->withRequestValue() 
-                  : $resource;
+        $resource = request()->isMethod('post') ? $resource->withRequestValue() : $resource;
 
         if (request()->isMethod('post')) {
             $resource = $resource->store();

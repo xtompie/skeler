@@ -105,6 +105,13 @@ class Resource
         return $resource;
     }
 
+    public function withNewModel()
+    {
+        return $this->withModel(
+            (new ReflectionClass($this->modelClass()))->newInstance()
+        );
+    }
+
     public function withValue($value)
     {
         $resource = clone $this;
@@ -153,12 +160,22 @@ class Resource
 
     public function isContext($context)
     {
-        return $this->context() === $context;
+        return in_array($this->context(), is_array($context) ? $context : [$context]);
     }
 
     public function request()
     {
         return $this->request;
+    }
+
+    public function hasModel()
+    {
+        return (bool)$this->model;
+    }
+
+    public function hasId()
+    {
+        return (bool)$this->id();
     }
 
     /* routes */
@@ -301,10 +318,10 @@ class Resource
 
     public function title()
     {
-        $attrs = collect($this->model->getAttributes())->keys();
+        $attrs = collect($this->model()->getAttributes())->keys();
         foreach (['title', 'name', 'id'] as $attr) {
             if ($attrs->contains('title')) {
-                return $this->model->$attr;
+                return $this->model()->$attr;
             }
         }
         return null;
@@ -320,62 +337,72 @@ class Resource
         return null;
     }
 
-    /**
-     * Actions
-     *
-     * @return void
-     */
+    /* actions */
 
     public function actions()
     {
-        if (!$this->id()) {
-            return
-                $this->actionIndex()
-                + $this->actionCreate()
-            ;
+        if ($this->isContext('index') && !$this->hasId()) {
+            return [
+                $this->actionCreate(),
+            ];
         }
 
-        return
-            $this->actionIndex()
-            + $this->actionDetail()
-            + $this->actionUpdate()
-            + $this->actionDuplicate()
-            + $this->actionDelete()
-        ;
+        if ($this->hasId() && !$this->isContext('delete')) {
+            return [
+                $this->actionDetail(),
+                $this->actionUpdate(),
+                $this->actionDuplicate(),
+                $this->actionDelete(),
+            ];
+        }
     }
 
     public function actionIndex()
     {
-        return ['index' => route("admin.resource.{$this->name()}.index")];
+        return [
+            'name' => 'index',
+            'url' => route("admin.resource.{$this->name()}.index"),
+        ];
     }
 
     public function actionCreate()
     {
-        return ['create' => route("admin.resource.{$this->name()}.create")];
+        return [
+            'name' => 'create',
+            'url' => route("admin.resource.{$this->name()}.create"),
+        ];
     }
 
     public function actionDuplicate()
     {
         return [
-            'duplicate' =>
-                route("admin.resource.{$this->name()}.create")
-                . '?' . Arr::query(['duplicate' => $this->id()])
+            'name' => 'duplicate',
+            'url' => route("admin.resource.{$this->name()}.create") . '?' . Arr::query(['duplicate' => $this->id()]),
         ];
     }
 
     public function actionDetail()
     {
-        return ['detail' => route("admin.resource.{$this->name()}.detail", ['id' => $this->id()])];
+        return [
+            'name' => 'detail',
+            'url' => route("admin.resource.{$this->name()}.detail", ['id' => $this->id()]),
+        ];
     }
 
     public function actionUpdate()
     {
-        return ['update' => route("admin.resource.{$this->name()}.update", ['id' => $this->id()])];
+        return [
+            'name' =>'update',
+            'url' => route("admin.resource.{$this->name()}.update", ['id' => $this->id()]),
+        ];
     }
 
     public function actionDelete()
     {
-        return ['delete' => route("admin.resource.{$this->name()}.delete", ['id' => $this->id()])];
+        return [
+            'name' => 'delete',
+            'url' => route("admin.resource.{$this->name()}.delete", ['id' => $this->id()]),
+        ];
     }
 
     /* query */
@@ -403,18 +430,16 @@ class Resource
 
     public function resourceNew()
     {
-        $model = (new ReflectionClass($this->modelClass()))->newInstance();
-        $resource = $this->withModel($model);
-        // if (array_key_exists('duplicate', $params)) {
-        //     $duplicate = $resource->withContext('update')->withId($params['duplicate']);
-        //     if ($duplicate) {
-        //         $resource = $resource->withValue()
-        //     }
-        //     $resource = $resource->resourceById()
-        // }
+        $resource = $this->withNewModel();
 
-        return $resource;
+        if ($this->request()->has('duplicate')) {
+            $duplicate = $resource->withContext('update')->withId($this->request()->get('duplicate'));
+            if ($duplicate) {
+                return  $resource->withValue($duplicate->value());
+            }
+        }
 
+        return $resource->withDummy();
     }
 
     public function resourceById($id)
@@ -444,33 +469,68 @@ class Resource
 
     public function vm()
     {
-        // no model
-        if (!$this->model) {
-            return collect([
-                'name' => $this->name(),
-                'context' => $this->context(),
+        $main = [
+            'name' => $this->name(),
+            'context' => $this->context(),
+            'actions' => $this->actions(),
+            'breadcrumb' => $this->breadcrumb(),
+        ];
+
+        if (!$this->hasModel()) {
+            return $main + [
                 'labels' => $this->resolveFields()->map(function(Field $field) {
                     return $field->label();
                 }),
-                'actions' => $this->actions(),
-            ])->toArray();
+            ];
         }
 
-        // model
-        return collect([
+        return $main + [
             'id' => $this->id(),
             'title' => $this->title(),
-            'name' => $this->name(),
-            'context' => $this->context(),
-            'fields' => $this->resolveFields()->map(function(Field $field){
+            'fields' => $this->resolveFields()->map(function(Field $field) {
                 return $field
                     ->withResource($this)
                     ->withValue($this->value())
                     ->withErrors($this->errors())
                     ->vm();
-            })->toArray(),
-            'actions' => $this->actions(),
-        ])->toArray();
+            }),
+        ];
+    }
+
+    public function breadcrumb()
+    {
+        $breadcrumb = [];
+        $breadcrumb[] = [
+            'title' => 'Admin',
+            'url' => '/admin',
+        ];
+        $breadcrumb[] = [
+            'title' => ucfirst($this->name()),
+            'url' => route("admin.resource.{$this->name()}.index"),
+            'active' => $this->isContext('index'),
+        ];
+        if ($this->isContext('create')) {
+            $breadcrumb[] = [
+                'title' => 'Create',
+                'url' => route("admin.resource.{$this->name()}.create"),
+                'active' => true,
+            ];
+        }
+        if ($this->isContext(['detail', 'update', 'delete'])) {
+            $breadcrumb[] = [
+                'title' => "#{$this->id()} {$this->title()}",
+                'url' => route("admin.resource.{$this->name()}.detail", ['id' => $this->id()]),
+                'active' => $this->isContext('detail'),
+            ];
+        }
+        if ($this->isContext(['update', 'delete'])) {
+            $breadcrumb[] = [
+                'title' => ucfirst($this->context()),
+                'url' => route("admin.resource.{$this->name()}.{$this->context()}", ['id' => $this->id()]),
+                'active' => true,
+            ];
+        }
+        return $breadcrumb;
     }
 
     /* value */
@@ -530,7 +590,7 @@ class Resource
         $this->resolveFields()->each(function(Field $field) {
             $field->withValue($this->value())->store();
         });
-        $this->model->save();
+        $this->model()->save();
         return;
     }
 
@@ -543,7 +603,7 @@ class Resource
         $this->resolveFields()->each(function(Field $field) {
             $field->withValue($this->value())->delete();
         });
-        $this->model->delete();
+        $this->model()->delete();
     }
 
 }
