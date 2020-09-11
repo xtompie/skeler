@@ -12,38 +12,31 @@ class UpdateController extends Controller
     public function __invoke($id)
     {
         // resolve resource by request
-        $resource = Resource::make(request()->route()->getAction()['resource']);
+        $resource = Resource::makeWithRequest(request(), 'update');
         abort_unless($resource, 404);
-
-        // init context
-        $resource = $resource->withContext(request()->route()->getAction()['context']);
-        abort_unless($resource, 404);
-        abort_unless($resource->context() === 'update', 404);
 
         // acl
         $resource->acl();
 
         // fetch
-        $resource = $resource->resourceById($id);
+        $resource = $resource->withId($id);
         abort_unless($resource, 404);
 
         // value,
-        $value = request()->isMethod('post') ? request()->all() : $resource->value();
+        $resource = request()->isMethod('post') ? $resource->withRequestValue(request()->all()) : $resource;
 
         // store
-        $errors = [];
         if (request()->isMethod('post')) {
-            $errors = $resource->store($value);
-            if (!$errors) {
+            $resource = $resource->store();
+            if (!$resource->erros()) {
                 $resource->redirect();
+                return;
             }
         }
 
         // vm
         $vm = [
-            'value' => $value,
-            'errors' => $errors,
-            'resource' => $resource->vm($value, $errors),
+            'resource' => $resource->vm(),
         ];
 
         return view('admin.resource.resource.update', $vm);

@@ -4,6 +4,7 @@ namespace App\Admin\Resource;
 
 use App\Admin\Field\Field;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -34,7 +35,31 @@ class Resource
         return self::makeAll()->each;
     }
 
+    public static function makeWithRequest(Request $request, $context)
+    {
+        $action = $request->route()->getAction();
+
+        $resource = static::make($action['resource']);
+        if (!$resource)  {
+            return null;
+        }
+
+        $resource = $resource->withRequest($request);
+
+        $resource = $resource->withContext($action['context']);
+        if (!$resource->isContext($context)) {
+            return null;
+        }
+
+        return $resource;
+    }
+
     /* instance */
+
+    /**
+     * @var Request
+     */
+    protected $request;
 
     /**
      * Context index|detail|create|update|delete
@@ -42,12 +67,29 @@ class Resource
      * @var String
      */
     protected $context;
+
     /**
      * @var Model $model
      */
     protected $model;
 
+    /** @var mixed */
+    protected $value;
+
+    /** @var bool */
+    protected $hasValue = false;
+
+    /** @var array */
+    protected $errors;
+
     /* mutables */
+
+    public function withRequest(Request $request)
+    {
+        $resource = clone $this;
+        $resource->request = $request;
+        return $resource;
+    }
 
     public function withContext($context)
     {
@@ -63,11 +105,37 @@ class Resource
         return $resource;
     }
 
+    public function withValue($value)
+    {
+        $resource = clone $this;
+        $resource->hasValue = true;
+        $resource->value = $value;
+        return $resource;
+    }
+
+    public function withErrors($errors)
+    {
+        $resource = clone $this;
+        $resource->errors = $errors;
+        return $resource;
+    }
+
+    public function withId($id)
+    {
+        $model = $this->query()->find($id);
+        return $model ? $this->withModel($model) : null;
+    }
+
     /* context */
 
     public function context()
     {
         return $this->context;
+    }
+
+    public function isContext($context)
+    {
+        return $this->context() === $context;
     }
 
     /* routes */
@@ -294,7 +362,7 @@ class Resource
         return call_user_func([$this->modelClass(), 'query']);
     }
 
-    public function resourcesByParams($params)
+    public function resourcesByParams()
     {
         $query = $this->query();
 
@@ -315,7 +383,7 @@ class Resource
         $model = (new ReflectionClass($this->modelClass()))->newInstance();
         $resource = $this->withModel($model);
         // if (array_key_exists('duplicate', $params)) {
-        //     $duplicate = $resource->resourceById($params['duplicate']);
+        //     $duplicate = $resource->withContext('update')->withId($params['duplicate']);
         //     if ($duplicate) {
         //         $resource = $resource->withValue()
         //     }
@@ -328,9 +396,7 @@ class Resource
 
     public function resourceById($id)
     {
-        /** create ->withId(), use it here and in resource New in duplicate */
-        $model = $this->query()->find($id);
-        return $model ? $this->withModel($model) : null;
+        return $this->withId($id);
     }
 
     /* fields */
@@ -387,6 +453,14 @@ class Resource
 
     public function value()
     {
+        // manual
+
+        if ($this->hasValue) {
+            return $this->value;
+        }
+
+        // resolved
+
         // dummy
         if ($this->context() == 'create') {
             $value = [];

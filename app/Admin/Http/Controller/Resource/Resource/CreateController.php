@@ -10,14 +10,10 @@ class CreateController extends Controller
 
     public function __invoke()
     {
-        // resolve resource by request
-        $resource = Resource::make(request()->route()->getAction()['resource']);
-        abort_unless($resource, 404);
 
-        // init context
-        $resource = $resource->withContext(request()->route()->getAction()['context']);
+        // resolve resource by request
+        $resource = Resource::makeWithRequest(request(), 'create');
         abort_unless($resource, 404);
-        abort_unless($resource->context() === 'create', 404);
 
         // acl
         $resource->acl();
@@ -26,7 +22,7 @@ class CreateController extends Controller
         $resource = $resource->resourceNew(request()->all());
 
         // value
-        $value = request()->isMethod('post') ? request()->all() : $resource->value();
+        $value = request()->isMethod('post') ? request()->all() : $resource->withDummy();
 
         // store
         $errors = [];
