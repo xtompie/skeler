@@ -11,36 +11,27 @@ class CreateController extends Controller
     public function __invoke()
     {
 
-        // resolve resource by request
         $resource = Resource::makeWithRequest(request(), 'create');
         abort_unless($resource, 404);
 
-        // acl
         $resource->acl();
 
-        // init
-        $resource = $resource->resourceNew(request()->all());
+        $resource = $resource->resourceNew();
 
-        // value
-        $value = request()->isMethod('post') ? request()->all() : $resource->withDummy();
+        $resource = request()->isMethod('post') 
+                 ? $resource->withRequestValue()
+                 : $resource->withDummy();
 
-        // store
-        $errors = [];
         if (request()->isMethod('post')) {
-            $errors = $resource->store($value);
-            if (!$errors) {
+            $resource = $resource->store();
+            if (!$resource->errors()) {
                 return $resource->redirect();
             }
         }
 
-        // vm
-        $vm = [
-            'value' => $value,
-            'errors' => $errors,
-            'resource' => $resource->vm($value, $errors),
-        ];
-
-        return view('admin.resource.resource.create', $vm);
+        return view('admin.resource.resource.create', [
+            'resource' => $resource->vm(),
+        ]);
     }
 
 }

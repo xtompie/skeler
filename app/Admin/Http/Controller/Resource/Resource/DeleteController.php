@@ -10,30 +10,28 @@ class DeleteController extends Controller
 
     public function __invoke($id)
     {
-        // resolve resource by request
         $resource = Resource::makeWithRequest(request(), 'delete');
         abort_unless($resource, 404);
 
-        // acl
         $resource->acl();
 
-        // fetch
         $resource = $resource->resourceById($id);
         abort_unless($resource, 404);
 
-        // delete
+        $resource = request()->isMethod('post') 
+                  ? $resource->withRequestValue() 
+                  : $resource;
+
         if (request()->isMethod('post')) {
-            $resource->delete();
-            $resource->redirect();
-            return;
+            $resource = $resource->delete();
+            if (!$resource->errors()) {
+                return $resource->redirect();
+            }
         }
 
-        // vm
-        $vm = [
+        return view('admin.resource.resource.delete', [
             'resource' => $resource->vm(),
-        ];
-
-        return view('admin.resource.resource.delete', $vm);
+        ]);
     }
 
 }

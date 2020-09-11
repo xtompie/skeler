@@ -108,8 +108,26 @@ class Resource
     public function withValue($value)
     {
         $resource = clone $this;
-        $resource->hasValue = true;
         $resource->value = $value;
+        return $resource;
+    }
+
+    public function withRequestValue()
+    {
+        return $this->withValue($this->request()->all());
+    }
+
+    public function withDummy()
+    {
+        $resource = clone $this;
+        $resource->value = $this->dummy();
+        return $resource;
+    }
+
+    public function withLoad()
+    {
+        $resource = clone $this;
+        $resource->value = $this->load();
         return $resource;
     }
 
@@ -123,7 +141,7 @@ class Resource
     public function withId($id)
     {
         $model = $this->query()->find($id);
-        return $model ? $this->withModel($model) : null;
+        return $model ? $this->withModel($model)->withLoad() : null;
     }
 
     /* context */
@@ -136,6 +154,11 @@ class Resource
     public function isContext($context)
     {
         return $this->context() === $context;
+    }
+
+    public function request()
+    {
+        return $this->request;
     }
 
     /* routes */
@@ -371,14 +394,14 @@ class Resource
         $result = [
             'models' => $models,
             'resources' => $models->map(function($model) {
-                return $this->withModel($model);
+                return $this->withModel($model)->withLoad();
             }),
         ];
 
         return $result;
     }
 
-    public function resourceNew($params)
+    public function resourceNew()
     {
         $model = (new ReflectionClass($this->modelClass()))->newInstance();
         $resource = $this->withModel($model);
@@ -419,7 +442,7 @@ class Resource
 
     /* view */
 
-    public function vm($value = null, $errors = null)
+    public function vm()
     {
         // no model
         if (!$this->model) {
@@ -434,16 +457,17 @@ class Resource
         }
 
         // model
-        $value = func_num_args() > 0 ? $value : $this->value();
         return collect([
             'id' => $this->id(),
             'title' => $this->title(),
             'name' => $this->name(),
             'context' => $this->context(),
-            'fields' => $this->resolveFields()->map(function(Field $field) use ($value, $errors) {
-                $field = $field->withResource($this)->withValue($value);
-                $field = $errors ? $field->withErrors($errors) : $field;
-                return $field->vm();
+            'fields' => $this->resolveFields()->map(function(Field $field){
+                return $field
+                    ->withResource($this)
+                    ->withValue($this->value())
+                    ->withErrors($this->errors())
+                    ->vm();
             })->toArray(),
             'actions' => $this->actions(),
         ])->toArray();
@@ -453,24 +477,25 @@ class Resource
 
     public function value()
     {
-        // manual
+        return $this->value;
+    }
 
-        if ($this->hasValue) {
-            return $this->value;
-        }
+    protected function dummy()
+    {
+        $value = [];
+        $this->resolveFields()->each(function(Field $field) use (&$value) {
+            $value = array_merge($value, $field->withDummy()->valuePack());
+        });
+        return $value;
+    }
 
-        // resolved
+    public function errors()
+    {
+        return $this->errors;
+    }
 
-        // dummy
-        if ($this->context() == 'create') {
-            $value = [];
-            $this->resolveFields()->each(function(Field $field) use (&$value) {
-                $value = array_merge($value, $field->withDummy()->valuePack());
-            });
-            return $value;
-        }
-
-        // from model
+    protected function load()
+    {
         $value = [];
         $this->resolveFields()->each(function(Field $field) use (&$value) {
             $value = array_merge($value, $field->withLoad()->valuePack());
@@ -489,26 +514,35 @@ class Resource
         return $rules;
     }
 
-    public function validate($value)
+    public function validate()
     {
-        $validator = validator($value, $this->rules());
-        return $validator->fails() ? $validator->errors()->toArray() : null;
+        $validator = validator($this->value(), $this->rules());
+        $errors = $validator->fails() ? $validator->errors()->toArray() : null;
+        return $this->withErrors($errors);
     }
 
-    public function store($value)
+    public function store()
     {
-        $errors = $this->validate($value);
-        if ($errors) {
-            return $errors;
+        $resource = $this->validate();
+        if ($resource->errors()) {
+            return $resource;
         }
-        $this->resolveFields()->each(function(Field $field) use ($value) {
-            $field->withValue($value)->store();
+        $this->resolveFields()->each(function(Field $field) {
+            $field->withValue($this->value())->store();
         });
         $this->model->save();
+        return;
     }
 
     public function delete()
     {
+        $resource = $this->validate();
+        if ($resource->errors()) {
+            return $resource;
+        }
+        $this->resolveFields()->each(function(Field $field) {
+            $field->withValue($this->value())->delete();
+        });
         $this->model->delete();
     }
 

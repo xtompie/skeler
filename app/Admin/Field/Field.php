@@ -254,6 +254,11 @@ class Field
         $this->model()->{$this->name()} = $this->value();
     }
 
+    public function delete()
+    {
+        
+    }
+
     public function valuePack()
     {
         return $this->pack($this->value());
