@@ -3,8 +3,6 @@
 namespace App\Admin\Field;
 
 use App\Admin\Resource\Resource;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class Field
 {
@@ -25,7 +23,6 @@ class Field
     protected $resource;
     protected $value;
     protected $errors;
-    protected $type;
     protected $name;
     protected $label;
     protected $view;
@@ -33,7 +30,7 @@ class Field
     protected $loadUsing;
     protected $storeUsing;
     protected $showUsing;
-    protected $enableOn = ['detail', 'create', 'update'];
+    protected $enableOn;
     protected $rules;
 
     /* mutables */
@@ -98,13 +95,9 @@ class Field
      * @param String $type
      * @return static
      */
-    public function type($type = null)
+    public function type()
     {
-        if (func_num_args() == 0) {
-            return $this->type;
-        }
-        $this->type = $type;
-        return $this;
+        throw new \LogicException('Field type not defined');
     }
 
     /**
@@ -114,10 +107,15 @@ class Field
     public function name($name = null)
     {
         if (func_num_args() == 0) {
-            return $this->name;
+            return $this->name ?: $this->nameDefault();
         }
         $this->name = $name;
         return $this;
+    }
+
+    public function nameDefault()
+    {
+        return null;
     }
 
     /**
@@ -127,10 +125,15 @@ class Field
     public function label($label = null)
     {
         if (func_num_args() == 0) {
-            return $this->label;
+            return $this->label ?: $this->labelDefault();
         }
         $this->label = $label;
         return $this;
+    }
+
+    public function labelDefault()
+    {
+        return $this->type();
     }
 
     /**
@@ -140,7 +143,7 @@ class Field
     public function enableOn($contexts = [])
     {
         if (func_num_args() == 0) {
-            return $this->enableOn;
+            return $this->enableOn ?: $this->enableDefault();
         }
         $this->enableOn = is_string($contexts) ? explode('|', $contexts) : $contexts;
         return $this;
@@ -148,23 +151,28 @@ class Field
 
     public function enableOnIndex()
     {
-        $this->enableOn = collect($this->enableOn)->add('index')->unique()->toArray();
+        $this->enableOn(collect($this->enableOn())->add('index')->unique()->toArray());
         return $this;
     }
 
-    public function hideOnDetail()
+    public function disableOnDetail()
     {
-        $this->enableOn = collect($this->enableOn)->reject(function($i) { return $i == 'detail'; })->toArray();
+        $this->enableOn(collect($this->enableOn)->reject(function($i) { return $i == 'detail'; })->toArray());
         return $this;
+    }
+
+    public function enableDefault()
+    {
+        return ['detail', 'create', 'update'];
     }
 
     public function resolveField()
     {
-        if ($this->enableOn instanceof \Closure ) {
-            return call_user_func($this->enableOn, $this) ? clone $this : null;
+        if ($this->enableOn() instanceof \Closure) {
+            return call_user_func($this->enableOn(), $this) ? clone $this : null;
         }
 
-        return in_array($this->context(), $this->enableOn) ? clone $this : null;
+        return in_array($this->context(), (array)$this->enableOn()) ? clone $this : null;
     }
 
     /* view */
@@ -256,7 +264,7 @@ class Field
 
     public function delete()
     {
-        
+
     }
 
     public function valuePack()

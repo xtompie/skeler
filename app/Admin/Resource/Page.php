@@ -4,8 +4,12 @@ namespace App\Admin\Resource;
 
 use App\Admin\Field\ID;
 use App\Admin\Field\Text;
+use App\Admin\Field\Info;
 use Illuminate\Support\Arr;
 use App\Admin\Field\Textarea;
+use App\Admin\Filter\Search;
+use App\Admin\Filter\ID as FilterID;
+use App\Admin\Filter\Select;
 
 class Page extends Resource
 {
@@ -15,8 +19,11 @@ class Page extends Resource
         return [
             ID::make(),
             Text::make()->name('title')->label('Title')->rules('min:2')->enableOnIndex(),
+            Info::make()->label('Info')->loadUsing(function(Info $field){
+                return strtoupper(substr($field->model()->title, 0, 10));
+            }),
             Text::make()->name('subtitle')->label('Subtitle'),
-            Textarea::make()->name('body')->label('Body')->hideOnDetail()->rows(10),
+            Textarea::make()->name('body')->label('Body')->disableOnDetail()->rows(10),
         ];
     }
 
@@ -50,6 +57,18 @@ class Page extends Resource
     {
         return [
             'title' => 'XD',
+        ];
+    }
+
+    public function filters()
+    {
+        return [
+            FilterID::make(),
+            Search::make()->name('title'),
+            Select::make()->name('title_first_letter')->field('title')->label('Title...')->options([
+                'aa' => 'Title: aa',
+                'bb' => 'Title: bb',
+            ])
         ];
     }
 

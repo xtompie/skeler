@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Admin\Field;
+namespace App\Admin\Filter;
 
-class ID extends Field
+class ID extends Filter
 {
 
     public function type()
@@ -10,9 +10,9 @@ class ID extends Field
         return 'id';
     }
 
-    public function enableDefault()
+    public function apply()
     {
-        return ['index', 'detail'];
+        $this->query()->where($this->name(), "=", "{$this->value()}");
     }
 
     public function nameDefault()
@@ -22,13 +22,7 @@ class ID extends Field
 
     public function labelDefault()
     {
-        return 'ID';
+        return 'ID...';
     }
-
-    public function store()
-    {
-        return;
-    }
-
 
 }

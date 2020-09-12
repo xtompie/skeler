@@ -5,11 +5,15 @@ namespace App\Admin\Field;
 class Textarea extends Field
 {
 
-    protected $type = 'textarea';
     protected $cols;
     protected $rows;
 
-    /**
+    public function type()
+    {
+        return 'textarea';
+    }
+
+     /**
      * @param string $cols
      * @return static
      */

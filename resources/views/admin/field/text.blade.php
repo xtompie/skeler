@@ -1,5 +1,7 @@
 @if ($context === 'index')
-    {{ $value }}
+    <td>
+        {{ $value }}
+    </td>
 @elseif ($context === 'detail')
     <div class="row">
         <div class="col-sm-2">

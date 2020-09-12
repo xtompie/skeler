@@ -8,8 +8,10 @@
 
     @include('admin.common.actions', $resource)
 
+    @include('admin.common.filters', $resource)
+
     <table class="table">
-        <thead>
+        <thead class="thead-light">
             <tr>
                 @foreach ($resource['labels'] as $label)
                     <th class="text-left">
@@ -23,9 +25,7 @@
             @foreach ($resources as $resource)
                 <tr>
                     @foreach ($resource['fields'] as $field)
-                        <td>
-                            @include($field['view'], $field)
-                        </td>
+                        @include($field['view'], $field)
                     @endforeach
                     <td>
                         @include('admin.common.actions', $resource)

@@ -2,13 +2,15 @@
 
 namespace App\Admin\Resource;
 
-use App\Admin\Field\Field;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 use \ReflectionClass;
+use App\Admin\Field\Field;
+use App\Admin\Filter\Filter;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Resource
 {
@@ -76,11 +78,11 @@ class Resource
     /** @var mixed */
     protected $value;
 
-    /** @var bool */
-    protected $hasValue = false;
-
     /** @var array */
     protected $errors;
+
+    /** @var array */
+    protected $filters;
 
     /* mutables */
 
@@ -147,11 +149,11 @@ class Resource
 
     public function withId($id)
     {
-        $model = $this->query()->find($id);
+        $model = $this->queryForItem()->find($id);
         return $model ? $this->withModel($model)->withLoad() : null;
     }
 
-    /* context */
+    /*  */
 
     public function context()
     {
@@ -407,14 +409,32 @@ class Resource
 
     /* query */
 
+    /**
+     * @return Builder
+     */
     protected function query()
     {
         return call_user_func([$this->modelClass(), 'query']);
     }
 
-    public function resourcesByParams()
+    protected function queryForItem()
+    {
+        return $this->query();
+    }
+
+    protected function queryForList()
     {
         $query = $this->query();
+
+        $this->applyFilters($query);
+
+        return $query;
+    }
+
+
+    public function resourcesByParams()
+    {
+        $query = $this->queryForList();
 
         $models = $query->paginate(20);
 
@@ -465,6 +485,31 @@ class Resource
         ;
     }
 
+    /* filters */
+
+    public function filters()
+    {
+        return [];
+    }
+
+    public function applyFilters(Builder $query)
+    {
+        $this->filters = collect($this->filters())->map(function(Filter $filter) use ($query) {
+            return $filter->withResource($this)->withQuery($query)->runApply();
+        })->toArray();
+    }
+
+    public function resolveFiltersVm()
+    {
+        return collect($this->filters?:[])
+            ->map(function(Filter $filter) {
+                return $filter->vm();
+            })
+            ->toArray()
+        ;
+    }
+
+
     /* view */
 
     public function vm()
@@ -481,6 +526,7 @@ class Resource
                 'labels' => $this->resolveFields()->map(function(Field $field) {
                     return $field->label();
                 }),
+                'filters' => $this->resolveFiltersVm(),
             ];
         }
 
@@ -591,7 +637,7 @@ class Resource
             $field->withValue($this->value())->store();
         });
         $this->model()->save();
-        return;
+        return $resource;
     }
 
     public function delete()
@@ -604,6 +650,7 @@ class Resource
             $field->withValue($this->value())->delete();
         });
         $this->model()->delete();
+        return $resource;
     }
 
 }

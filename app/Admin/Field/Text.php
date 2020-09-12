@@ -5,6 +5,9 @@ namespace App\Admin\Field;
 class Text extends Field
 {
 
-    protected $type = 'text';
+   public function type()
+   {
+       return 'text';
+   }
 
 }
