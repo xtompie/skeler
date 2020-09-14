@@ -37,7 +37,7 @@ class Resource
         return self::makeAll()->each;
     }
 
-    public static function makeWithRequest(Request $request, $context)
+    public static function makeWithBackground(Request $request, $context)
     {
         $action = $request->route()->getAction();
 
@@ -84,12 +84,16 @@ class Resource
     /** @var array */
     protected $filters;
 
+    /** @var array */
+    protected $fields;
+
     /* mutables */
 
     public function withRequest(Request $request)
     {
         $resource = clone $this;
         $resource->request = $request;
+        $resource->fields = null;
         return $resource;
     }
 
@@ -97,6 +101,7 @@ class Resource
     {
         $resource = clone $this;
         $resource->context = $context;
+        $resource->fields = null;
         return $resource;
     }
 
@@ -117,7 +122,7 @@ class Resource
     public function withValue($value)
     {
         $resource = clone $this;
-        $resource->value = $value;
+        $resource->setValue($value);
         return $resource;
     }
 
@@ -129,14 +134,14 @@ class Resource
     public function withDummy()
     {
         $resource = clone $this;
-        $resource->value = $this->dummy();
+        $resource->setValue($this->dummy());
         return $resource;
     }
 
     public function withLoad()
     {
         $resource = clone $this;
-        $resource->value = $this->load();
+        $resource->setValue($this->load());
         return $resource;
     }
 
@@ -440,7 +445,7 @@ class Resource
 
         $result = [
             'models' => $models,
-            'resources' => $models->map(function($model) {
+            'resources' => collect($models->items())->map(function($model) {
                 return $this->withModel($model)->withLoad();
             }),
         ];
@@ -476,7 +481,11 @@ class Resource
 
     public function resolveFields()
     {
-        return collect($this->fields())
+        if ($this->fields !== null) {
+            return $this->fields;
+        }
+
+        return $this->fields = collect($this->fields())
             ->filter()
             ->map(function(Field $field) {
                 return $field->withResource($this)->resolveField();
@@ -492,23 +501,23 @@ class Resource
         return [];
     }
 
+    public function resolveFilters()
+    {
+        if ($this->filters !== null) {
+            return $this->filters;
+        }
+
+        return $this->filters = collect($this->filters())->map(function(Filter $filter) {
+            return $filter->withResource($this);
+        });
+    }
+
     public function applyFilters(Builder $query)
     {
-        $this->filters = collect($this->filters())->map(function(Filter $filter) use ($query) {
-            return $filter->withResource($this)->withQuery($query)->runApply();
-        })->toArray();
+        $this->resolveFilters()->map(function(Filter $filter) use ($query) {
+            return $filter->withQuery($query)->runApply();
+        });
     }
-
-    public function resolveFiltersVm()
-    {
-        return collect($this->filters?:[])
-            ->map(function(Filter $filter) {
-                return $filter->vm();
-            })
-            ->toArray()
-        ;
-    }
-
 
     /* view */
 
@@ -525,8 +534,10 @@ class Resource
             return $main + [
                 'labels' => $this->resolveFields()->map(function(Field $field) {
                     return $field->label();
-                }),
-                'filters' => $this->resolveFiltersVm(),
+                })->toArray(),
+                'filters' => $this->resolveFilters()->map(function(Filter $filter) {
+                    return $filter->vm();
+                })->filter()->toArray(),
             ];
         }
 
@@ -586,6 +597,15 @@ class Resource
         return $this->value;
     }
 
+    public function setValue($value)
+    {
+        $this->value = $value;
+        $this->fields = $this->resolveFields()->map(function (Field $field) {
+            return $field->withValue($this->value);
+        });
+        return $this;
+    }
+
     protected function dummy()
     {
         $value = [];
@@ -620,7 +640,7 @@ class Resource
         return $rules;
     }
 
-    public function validate()
+    protected function validate()
     {
         $validator = validator($this->value(), $this->rules());
         $errors = $validator->fails() ? $validator->errors()->toArray() : null;
@@ -634,7 +654,7 @@ class Resource
             return $resource;
         }
         $this->resolveFields()->each(function(Field $field) {
-            $field->withValue($this->value())->store();
+            $field->store();
         });
         $this->model()->save();
         return $resource;
@@ -647,7 +667,7 @@ class Resource
             return $resource;
         }
         $this->resolveFields()->each(function(Field $field) {
-            $field->withValue($this->value())->delete();
+            $field->delete();
         });
         $this->model()->delete();
         return $resource;

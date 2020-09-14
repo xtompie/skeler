@@ -10,7 +10,7 @@ class DeleteController extends Controller
 
     public function __invoke($id)
     {
-        $resource = Resource::makeWithRequest(request(), 'delete');
+        $resource = Resource::makeWithBackground(request(), 'delete');
         abort_unless($resource, 404);
 
         $resource->acl();
@@ -18,8 +18,8 @@ class DeleteController extends Controller
         $resource = $resource->resourceById($id);
         abort_unless($resource, 404);
 
-        $resource = request()->isMethod('post') 
-                  ? $resource->withRequestValue() 
+        $resource = request()->isMethod('post')
+                  ? $resource->withRequestValue()
                   : $resource;
 
         if (request()->isMethod('post')) {

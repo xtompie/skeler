@@ -10,7 +10,7 @@ class DetailController extends Controller
 
     public function __invoke($id)
     {
-        $resource = Resource::makeWithRequest(request(), 'detail');
+        $resource = Resource::makeWithBackground(request(), 'detail');
         abort_unless($resource, 404);
 
         $resource->acl();

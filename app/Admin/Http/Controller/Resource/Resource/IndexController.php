@@ -10,7 +10,7 @@ class IndexController extends Controller
 
     public function __invoke()
     {
-        $resource = Resource::makeWithRequest(request(), 'index');
+        $resource = Resource::makeWithBackground(request(), 'index');
         abort_unless($resource, 404);
 
         $resource->acl();

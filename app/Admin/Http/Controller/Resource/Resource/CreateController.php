@@ -11,7 +11,7 @@ class CreateController extends Controller
     public function __invoke()
     {
 
-        $resource = Resource::makeWithRequest(request(), 'create');
+        $resource = Resource::makeWithBackground(request(), 'create');
         abort_unless($resource, 404);
 
         $resource->acl();

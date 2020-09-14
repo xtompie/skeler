@@ -2,14 +2,16 @@
 
 namespace App\Admin\Resource;
 
+use App\Admin\Field\File;
 use App\Admin\Field\ID;
-use App\Admin\Field\Text;
 use App\Admin\Field\Info;
-use Illuminate\Support\Arr;
+use App\Admin\Field\Text;
 use App\Admin\Field\Textarea;
-use App\Admin\Filter\Search;
+use App\Admin\Filter\Force;
 use App\Admin\Filter\ID as FilterID;
+use App\Admin\Filter\Search;
 use App\Admin\Filter\Select;
+use Illuminate\Support\Arr;
 
 class Page extends Resource
 {
@@ -19,11 +21,12 @@ class Page extends Resource
         return [
             ID::make(),
             Text::make()->name('title')->label('Title')->rules('min:2')->enableOnIndex(),
-            Info::make()->label('Info')->loadUsing(function(Info $field){
+            Info::make()->label('Info')->loadUsing(function(Info $field) {
                 return strtoupper(substr($field->model()->title, 0, 10));
             }),
             Text::make()->name('subtitle')->label('Subtitle'),
             Textarea::make()->name('body')->label('Body')->disableOnDetail()->rows(10),
+            // File::make()->name('file')->label('File'),
         ];
     }
 
@@ -68,7 +71,8 @@ class Page extends Resource
             Select::make()->name('title_first_letter')->field('title')->label('Title...')->options([
                 'aa' => 'Title: aa',
                 'bb' => 'Title: bb',
-            ])
+            ]),
+            // Force::make(),
         ];
     }
 

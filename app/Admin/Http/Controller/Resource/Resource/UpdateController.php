@@ -10,7 +10,7 @@ class UpdateController extends Controller
 
     public function __invoke($id)
     {
-        $resource = Resource::makeWithRequest(request(), 'update');
+        $resource = Resource::makeWithBackground(request(), 'update');
         abort_unless($resource, 404);
 
         $resource->acl();
