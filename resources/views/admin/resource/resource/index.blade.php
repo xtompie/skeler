@@ -34,4 +34,7 @@
             @endforeach
         </tbody>
     </table>
+
+    {{ $pagination->links() }}
+
 @endsection

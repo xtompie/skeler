@@ -19,7 +19,9 @@
                 name="{{ $name }}"
                 class="
                     form-control
-                    {{ $errors ? 'is-invalid' : ''}}
+                    @if ($errors)
+                        is-invalid
+                    @endif
                 "
                 cols="{{ $cols }}"
                 rows="{{ $rows }}"

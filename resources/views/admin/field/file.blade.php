@@ -20,7 +20,9 @@
                 name="{{ $name }}"
                 class="
                     form-control-file
-                    {{ $errors ? 'is-invalid' : ''}}
+                    @if ($errors)
+                        is-invalid
+                    @endif
                 "
             />
             @include('admin.common.errors', ['errors' => $errors])

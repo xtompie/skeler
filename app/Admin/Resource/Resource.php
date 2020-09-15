@@ -442,6 +442,7 @@ class Resource
         $query = $this->queryForList();
 
         $models = $query->paginate(20);
+        $models->withQueryString();
 
         $result = [
             'models' => $models,
