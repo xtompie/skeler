@@ -162,7 +162,6 @@ abstract class Filter
         return $this->request()->url() . '?' . Arr::query($query);
     }
 
-
     /* view */
 
     public function view($view = null)

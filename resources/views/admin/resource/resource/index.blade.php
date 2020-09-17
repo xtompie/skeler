@@ -15,7 +15,18 @@
             <tr>
                 @foreach ($resource['labels'] as $label)
                     <th class="text-left">
-                        {{ $label }}
+                        @if ($label['sort'] != null)
+                            <a href="{{ $label['sort']['url'] }}">
+                        @endif
+                            {{ $label['title'] }}
+                        @if ($label['sort'] != null)
+                                @if ($label['sort']['direction'] === 'asc')
+                                ▲
+                                @elseif ($label['sort']['direction'] === 'desc')
+                                ▼
+                                @endif
+                            </a>
+                        @endif
                     </th>
                 @endforeach
                 <th></th>

@@ -3,6 +3,8 @@
 namespace App\Admin\Field;
 
 use App\Admin\Resource\Resource;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 
 class Field
 {
@@ -32,6 +34,10 @@ class Field
     protected $showUsing;
     protected $enableOn;
     protected $rules;
+    protected $sortable;
+    protected $sortAuto;
+    protected $sortDir;
+    protected $sort;
 
     /* mutables */
 
@@ -265,6 +271,125 @@ class Field
     public function delete()
     {
 
+    }
+
+    /* sort */
+
+    public function sortable($sortable = null)
+    {
+        if (func_num_args() === 0) {
+            return $this->sortable ?: $this->sortableDefault();
+        }
+
+        $this->sortable = $sortable;
+        return $this;
+    }
+
+    public function sortableDefault()
+    {
+        return false;
+    }
+
+    public function sortAuto($sortAuto = null)
+    {
+        if (func_num_args() === 0) {
+            return $this->sortAuto ?: $this->sortAutoDefault();
+        }
+
+        $this->sortAuto = $sortAuto;
+        return $this;
+    }
+
+    public function sortAutoDefault()
+    {
+        return false;
+    }
+
+    public function sortDir($sortDir = null)
+    {
+        if (func_num_args() === 0) {
+            return $this->sortDir ?: $this->sortDirDefault();
+        }
+
+        $this->sortDir = $sortDir;
+        return $this;
+    }
+
+    public function sortDirDefault()
+    {
+        return 'desc';
+    }
+
+    protected function sort($sort = null)
+    {
+        if (func_num_args() == 0) {
+            return $this->sort;
+        }
+        $this->sort = $sort;
+        return $this;
+    }
+
+    protected function applySort(Builder $query)
+    {
+        if ($this->sort() === 'asc') {
+            $query->orderBy($this->name());
+        }
+        else if ($this->sort() === 'desc') {
+            $query->orderByDesc($this->name());
+        }
+    }
+
+    public function applySortAuto(Builder $query)
+    {
+        $this->sort($this->sortDir());
+        $this->applySort($query);
+    }
+
+    public function applySortRequest(Builder $query)
+    {
+        $supported = [
+            $this->name() . '-asc' => 'asc',
+            $this->name() . '-desc' => 'desc',
+        ];
+
+        $value = $this->resource()->request()->get('sort');
+
+        $this->sort(array_key_exists($value, $supported) ? $supported[$value] : null);
+
+        $this->applySort($query);
+
+        return $this->sort() !== null;
+    }
+
+    public function vmSort()
+    {
+        if (!$this->sortable()) {
+            return null;
+        }
+
+        // next value
+        $next = null;
+        if ($this->sort() === null) {
+            $next = $this->sortDir();
+        }
+        if ($this->sort() === 'asc') {
+            $next = 'desc';
+        }
+        if ($this->sort() === 'desc') {
+            $next = 'asc';
+        }
+        $next = "{$this->name()}-$next";
+
+        // next url
+        $request = $this->resource()->request();
+        $query = $request->query();
+        Arr::set($query, "sort", $next);
+        $url =  $request->url() . '?' . Arr::query($query);
+
+        return [
+            'direction' => $this->sort(),
+            'url' => $url,
+        ];
     }
 
     public function valuePack()

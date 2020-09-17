@@ -7,7 +7,7 @@ use App\Admin\Field\ID;
 use App\Admin\Field\Info;
 use App\Admin\Field\Text;
 use App\Admin\Field\Textarea;
-use App\Admin\Filter\Force;
+use App\Admin\Filter\TitleWithN;
 use App\Admin\Filter\ID as FilterID;
 use App\Admin\Filter\Search;
 use App\Admin\Filter\Select;
@@ -20,7 +20,7 @@ class Page extends Resource
     {
         return [
             ID::make(),
-            Text::make()->name('title')->label('Title')->rules('min:2')->enableOnIndex(),
+            Text::make()->name('title')->label('Title')->rules('min:2')->enableOnIndex()->sortable(true),
             Info::make()->label('Info')->loadUsing(function(Info $field) {
                 return strtoupper(substr($field->model()->title, 0, 10));
             }),
@@ -72,7 +72,7 @@ class Page extends Resource
                 'aa' => 'Title: aa',
                 'bb' => 'Title: bb',
             ]),
-            // Force::make(),
+            // TitleWithN::make(),
         ];
     }
 

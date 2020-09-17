@@ -30,5 +30,20 @@ class ID extends Field
         return;
     }
 
+    public function sortableDefault()
+    {
+        return true;
+    }
+
+    public function sortAutoDefault()
+    {
+        return true;
+    }
+
+    public function sortDirDefault()
+    {
+        return 'desc';
+    }
+
 
 }

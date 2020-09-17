@@ -12,7 +12,6 @@ class Force extends Filter
 
     public function apply()
     {
-        $this->query()->where('title', "=", 'aa');
     }
 
     public function vm()

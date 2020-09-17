@@ -109,6 +109,7 @@ class Resource
     {
         $resource = clone $this;
         $resource->model = $model;
+        $resource->fields = null;
         return $resource;
     }
 
@@ -433,6 +434,8 @@ class Resource
 
         $this->applyFilters($query);
 
+        $this->applySort($query);
+
         return $query;
     }
 
@@ -443,6 +446,7 @@ class Resource
 
         $models = $query->paginate(20);
         $models->withQueryString();
+
 
         $result = [
             'models' => $models,
@@ -520,6 +524,40 @@ class Resource
         });
     }
 
+    /* sort */
+
+    public function applySort(Builder $query)
+    {
+        $appiled = false;
+
+        $this->resolveFields()->each(function(Field $field) use ($query, &$appiled) {
+            if (!$field->sortable()) {
+                return;
+            }
+            if ($field->applySortRequest($query)) {
+                $appiled = true;
+                return false;
+            }
+        });
+
+        if ($appiled) {
+            return;
+        }
+
+        $this->resolveFields()->each(function(Field $field) use ($query) {
+            if (!$field->sortable()) {
+                return;
+            }
+            if (!$field->sortAuto()) {
+                return;
+            }
+            if ($field->applySortAuto($query)) {
+                return false;
+            }
+        });
+
+    }
+
     /* view */
 
     public function vm()
@@ -534,11 +572,15 @@ class Resource
         if (!$this->hasModel()) {
             return $main + [
                 'labels' => $this->resolveFields()->map(function(Field $field) {
-                    return $field->label();
+                    return [
+                        'title' => $field->label(),
+                        'sort' => $field->vmSort(),
+                    ];
                 })->toArray(),
                 'filters' => $this->resolveFilters()->map(function(Filter $filter) {
                     return $filter->vm();
                 })->filter()->toArray(),
+                'sort' => $this->request()->get('sort'),
             ];
         }
 
@@ -547,7 +589,6 @@ class Resource
             'title' => $this->title(),
             'fields' => $this->resolveFields()->map(function(Field $field) {
                 return $field
-                    ->withResource($this)
                     ->withValue($this->value())
                     ->withErrors($this->errors())
                     ->vm();
