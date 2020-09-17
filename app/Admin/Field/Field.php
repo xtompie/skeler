@@ -4,7 +4,6 @@ namespace App\Admin\Field;
 
 use App\Admin\Resource\Resource;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
 
 class Field
 {
@@ -35,9 +34,9 @@ class Field
     protected $enableOn;
     protected $rules;
     protected $sortable;
-    protected $sortAuto;
-    protected $sortDir;
-    protected $sort;
+    protected $sortableFallback;
+    protected $sortableDirection;
+    protected $sortableSort;
 
     /* mutables */
 
@@ -290,78 +289,76 @@ class Field
         return false;
     }
 
-    public function sortAuto($sortAuto = null)
+    public function sortableFallback($sortableFallback = null)
     {
         if (func_num_args() === 0) {
-            return $this->sortAuto ?: $this->sortAutoDefault();
+            return $this->sortableFallback ?: $this->sortableFallbackDefault();
         }
 
-        $this->sortAuto = $sortAuto;
+        $this->sortableFallback = $sortableFallback;
         return $this;
     }
 
-    public function sortAutoDefault()
+    public function sortableFallbackDefault()
     {
         return false;
     }
 
-    public function sortDir($sortDir = null)
+    public function sortableDirection($sortableDirection = null)
     {
         if (func_num_args() === 0) {
-            return $this->sortDir ?: $this->sortDirDefault();
+            return $this->sortableDirection ?: $this->sortableDirectionDefault();
         }
 
-        $this->sortDir = $sortDir;
+        $this->sortableDirection = $sortableDirection;
         return $this;
     }
 
-    public function sortDirDefault()
+    public function sortableDirectionDefault()
     {
         return 'desc';
     }
 
-    protected function sort($sort = null)
+    protected function sortableSort($sort = null)
     {
         if (func_num_args() == 0) {
-            return $this->sort;
+            return $this->sortableSort;
         }
-        $this->sort = $sort;
+        $this->sortableSort = $sort;
         return $this;
     }
 
-    protected function applySort(Builder $query)
+    protected function sortableApplySortToQuery(Builder $query)
     {
-        if ($this->sort() === 'asc') {
+        if ($this->sortableSort() === 'asc') {
             $query->orderBy($this->name());
         }
-        else if ($this->sort() === 'desc') {
+        else if ($this->sortableSort() === 'desc') {
             $query->orderByDesc($this->name());
         }
     }
 
-    public function applySortAuto(Builder $query)
+    public function sortableFallbackApply(Builder $query)
     {
-        $this->sort($this->sortDir());
-        $this->applySort($query);
+        $this->sortableSort($this->sortableDirection());
+        $this->sortableApplySortToQuery($query);
     }
 
-    public function applySortRequest(Builder $query)
+    public function sortableApply(Builder $query, $value)
     {
         $supported = [
             $this->name() . '-asc' => 'asc',
             $this->name() . '-desc' => 'desc',
         ];
 
-        $value = $this->resource()->request()->get('sort');
+        $this->sortableSort(array_key_exists($value, $supported) ? $supported[$value] : null);
 
-        $this->sort(array_key_exists($value, $supported) ? $supported[$value] : null);
+        $this->sortableApplySortToQuery($query);
 
-        $this->applySort($query);
-
-        return $this->sort() !== null;
+        return $this->sortableSort() !== null;
     }
 
-    public function vmSort()
+    public function sortableVm()
     {
         if (!$this->sortable()) {
             return null;
@@ -369,26 +366,20 @@ class Field
 
         // next value
         $next = null;
-        if ($this->sort() === null) {
-            $next = $this->sortDir();
+        if ($this->sortableSort() === null) {
+            $next = $this->sortableDirection();
         }
-        if ($this->sort() === 'asc') {
+        if ($this->sortableSort() === 'asc') {
             $next = 'desc';
         }
-        if ($this->sort() === 'desc') {
+        if ($this->sortableSort() === 'desc') {
             $next = 'asc';
         }
         $next = "{$this->name()}-$next";
 
-        // next url
-        $request = $this->resource()->request();
-        $query = $request->query();
-        Arr::set($query, "sort", $next);
-        $url =  $request->url() . '?' . Arr::query($query);
-
         return [
-            'direction' => $this->sort(),
-            'url' => $url,
+            'direction' => $this->sortableSort(),
+            'url' => $this->resource()->sortableUrl($next),
         ];
     }
 

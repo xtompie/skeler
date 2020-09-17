@@ -87,6 +87,8 @@ class Resource
     /** @var array */
     protected $fields;
 
+    protected $sort;
+
     /* mutables */
 
     public function withRequest(Request $request)
@@ -529,18 +531,19 @@ class Resource
     public function applySort(Builder $query)
     {
         $appiled = false;
+        $sort = $this->request()->get('sort');
 
-        $this->resolveFields()->each(function(Field $field) use ($query, &$appiled) {
+        $this->resolveFields()->each(function(Field $field) use ($query, $sort) {
             if (!$field->sortable()) {
                 return;
             }
-            if ($field->applySortRequest($query)) {
-                $appiled = true;
+            if ($field->sortableApply($query, $sort)) {
+                $this->sort = $sort;
                 return false;
             }
         });
 
-        if ($appiled) {
+        if ($this->sort !== null) {
             return;
         }
 
@@ -548,14 +551,23 @@ class Resource
             if (!$field->sortable()) {
                 return;
             }
-            if (!$field->sortAuto()) {
+            if (!$field->sortableFallback()) {
                 return;
             }
-            if ($field->applySortAuto($query)) {
+            if ($field->sortableFallbackApply($query)) {
                 return false;
             }
         });
 
+    }
+
+    public function sortableUrl($sort)
+    {
+        // next url
+        $query = $this->request()->query();
+        Arr::set($query, "sort", $sort);
+        Arr::forget($query, 'page');
+        return $this->request()->url() . '?' . Arr::query($query);
     }
 
     /* view */
@@ -574,13 +586,13 @@ class Resource
                 'labels' => $this->resolveFields()->map(function(Field $field) {
                     return [
                         'title' => $field->label(),
-                        'sort' => $field->vmSort(),
+                        'sort' => $field->sortableVm(),
                     ];
                 })->toArray(),
                 'filters' => $this->resolveFilters()->map(function(Filter $filter) {
                     return $filter->vm();
                 })->filter()->toArray(),
-                'sort' => $this->request()->get('sort'),
+                'sort' => $this->sort,
             ];
         }
 

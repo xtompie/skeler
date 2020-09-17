@@ -159,6 +159,7 @@ abstract class Filter
     {
         $query = $this->request()->query();
         Arr::forget($query, "filter.{$this->name()}");
+        Arr::forget($query, "page");
         return $this->request()->url() . '?' . Arr::query($query);
     }
 
