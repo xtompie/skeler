@@ -46,6 +46,6 @@
         </tbody>
     </table>
 
-    {{ $pagination->links() }}
+    {{ $pagination->render('admin.common.pagination') }}
 
 @endsection
