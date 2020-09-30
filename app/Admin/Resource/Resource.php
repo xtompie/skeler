@@ -313,7 +313,7 @@ class Resource
 
     public function modelClass()
     {
-        return "App\\Model\\" . class_basename($this);
+        return "App\\Models\\" . class_basename($this);
     }
 
     public function model()

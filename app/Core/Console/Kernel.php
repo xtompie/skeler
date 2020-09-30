@@ -4,7 +4,6 @@ namespace App\Core\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Core\Console\Commands\ModelMake;
 
 class Kernel extends ConsoleKernel
 {
@@ -14,7 +13,6 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        ModelMake::class,
     ];
 
     /**
