@@ -1,6 +1,7 @@
 - media
 - panel
 - rels
-- Login
+- Login, auth. roles
+- lang
 - menu
 
