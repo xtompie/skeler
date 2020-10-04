@@ -1,8 +1,5 @@
 <?php
 
-
-use \Illuminate\Support\Facades\Route;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -15,7 +12,5 @@ use \Illuminate\Support\Facades\Route;
 */
 
 require base_path('app/Admin/Routes/routes.php');
+require base_path('app/Media/Routes/routes.php');
 
-Route::get('/', function() {
-    return view('home');
-});
