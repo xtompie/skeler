@@ -2,7 +2,8 @@
 
 namespace App\Media\Modify;
 
-use Illuminate\Filesystem\Filesystem;
+use Intervention\Image\Facades\Image;
+use App\Media\Util\EnsureDirForFile;
 
 class CropFilter implements FilterInterface
 {
@@ -16,9 +17,10 @@ class CropFilter implements FilterInterface
         $this->height = $height;
     }
 
-    public function __invoke(Filesystem $storage, $input, $output)
+    public function __invoke($input, $output)
     {
-        $storage->copy($input, $output);
+        EnsureDirForFile::invoke($output);
+        Image::make($input)->fit($this->width, $this->height)->save($output);
     }
 
 }

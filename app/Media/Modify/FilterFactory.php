@@ -7,7 +7,7 @@ class FilterFactory
 
     public function __invoke($name)
     {
-        $config = config("data.modify.filter.$name");
+        $config = config("media.modify.filter.$name");
         if (!$config || !$config['type']) {
             return null;
         }

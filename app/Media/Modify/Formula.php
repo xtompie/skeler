@@ -21,7 +21,7 @@ class Formula
     /**
      * Input path
      *
-     * @return string eg. "img/article/a/b/c/d/test.jpg"
+     * @return string eg. "app/img/article/a/b/c/d/test.jpg"
      */
     public function input()
     {
@@ -31,7 +31,7 @@ class Formula
     /**
      * Output path with filter name
      *
-     * @return string eg. "public/cache/img/article/a/b/c/d/test_s.jpg"
+     * @return string eg. "app/cache/img/article/a/b/c/d/test_s.jpg"
      */
     public function output()
     {
@@ -51,11 +51,11 @@ class Formula
     /**
      * Public url with filter name
      *
-     * @return string eg. "storage/cache/img/article/a/b/c/d/test_s.jpg"
+     * @return string eg. "/storage/img/article/a/b/c/d/test_s.jpg"
      */
     public function url()
     {
-        $this->url;
+        return $this->url;
     }
 
 }

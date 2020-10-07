@@ -30,14 +30,12 @@ class UrlProcess
             return null;
         }
 
-        dd($formula);
-
-        $executed = (new UnlessPersistsExecutor)->__invoke($formula);
-        if (!$executed) {
+        if (!(new IfNotExistsExecutor)->__invoke($formula)) {
             return null;
         }
 
-        return $formula;
+
+        return storage_path($formula->output());
     }
 
 }

@@ -144,17 +144,17 @@ class FormulaFactory
 
     protected function inputPrefix()
     {
-        return 'img';
+        return 'app/img';
     }
 
     protected function outputPrefix()
     {
-        return 'public/cache/img';
+        return 'app/cache/img';
     }
 
     protected function urlPrefix()
     {
-        return 'storage/cache/img';
+        return 'storage-img';
     }
 
 }

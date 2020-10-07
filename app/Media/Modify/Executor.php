@@ -7,10 +7,10 @@ class Executor
 
     public function __invoke(Formula $formula)
     {
+        $input = storage_path($formula->input());
+        $output = storage_path($formula->output());
 
-        $storage = Storage::make();
-
-        if (!$storage->exists($formula->input())) {
+        if (!file_exists($input)) {
             return false;
         }
 
@@ -20,9 +20,9 @@ class Executor
             return false;
         }
 
-        $filter($storage, $formula->input(), $formula->output());
+        $filter($input, $output);
 
-        if (!$storage->exists($formula->output())) {
+        if (!file_exists($output)) {
             return false;
         }
 

@@ -2,7 +2,7 @@
 
 namespace App\Media\Modify;
 
-use Illuminate\Filesystem\Filesystem;
+use Intervention\Image\Facades\Image;
 
 class ResizeFilter implements FilterInterface
 {
@@ -16,9 +16,9 @@ class ResizeFilter implements FilterInterface
         $this->height = $height;
     }
 
-    public function __invoke(Filesystem $storage, $input, $output)
+    public function __invoke($input, $output)
     {
-        $storage->copy($input, $output);
+        Image::make($input)->resize($this->width, $this->height)->save($output);
     }
 
 }

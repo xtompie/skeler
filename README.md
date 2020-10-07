@@ -159,3 +159,7 @@ server {
 
 Feel free to create an alias for that:
 `echo "alias startall=\"sudo service cron start && sudo service mysql start && sudo service nginx start && sudo service php7.3-fpm start\"" >> ~/.bash_aliases && exec $SHELL`
+
+
+- composer lokalnie
+- gd install

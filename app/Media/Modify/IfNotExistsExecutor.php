@@ -2,14 +2,14 @@
 
 namespace App\Media\Modify;
 
-class UnlessPersistsExecutor
+class IfNotExistsExecutor
 {
 
     public function __invoke(Formula $formula)
     {
-        $storage = Storage::make();
+        $output = storage_path($formula->output());
 
-        if ($storage->exists($formula->output())) {
+        if (file_exists($output)) {
             return true;
         }
 

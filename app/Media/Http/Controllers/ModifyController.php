@@ -11,10 +11,9 @@ class ModifyController extends Controller
 
     public function __invoke(Request $request)
     {
-        $formula = (new UrlProcess)->__invoke($request->path());
-        abort_unless($formula, 404);
-        dd($formula);
-        return response()->file($formula->output());
+        $out = (new UrlProcess)->__invoke($request->path());
+        abort_unless($out !== null, 404);
+        return response()->file($out);
    }
 
 }
