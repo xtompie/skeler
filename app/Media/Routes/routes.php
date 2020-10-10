@@ -1,6 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Media\Http\Controllers\ModifyController;
+use App\Media\Http\Controllers\ImgFilterController;
 
-Route::get('storage-img/{path}',  ModifyController::class)->where('path', '.+');
+Route::get('storage-img/{path}',  ImgFilterController::class)->where('path', '.+');

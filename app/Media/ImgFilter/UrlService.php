@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Media\Modify;
+namespace App\Media\ImgFilter;
 
 class UrlService
 {
@@ -24,7 +24,7 @@ class UrlService
      */
     public function __invoke($url)
     {
-        $formula = (new FormulaFactory)->forUrl($url);
+        $formula = FormulaByUrlFactory::invoke($url);
 
         if (!$formula) {
             return null;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Media\Modify;
+namespace App\Media\ImgFilter;
 
 /**
  * Formula Matcher

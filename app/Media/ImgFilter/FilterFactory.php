@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Media\Modify;
+namespace App\Media\ImgFilter;
 
 class FilterFactory
 {
 
     public function __invoke($name)
     {
-        $config = config("media.modify.filter.$name");
+        $config = config("media.imgfilter.filter.$name");
         if (!$config || !$config['type']) {
             return null;
         }

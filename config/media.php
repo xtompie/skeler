@@ -2,10 +2,10 @@
 
 return [
 
-    'modify' => [
+    'imgfilter' => [
 
         /**
-         * Filters config used by \App\Media\Modify\FilterFactory
+         * Filters config used by \App\Media\ImgFilter\FilterFactory
          */
         'filter' => [
             's' => ['type' => 'crop', 'w' => 400, 'h' => 225],

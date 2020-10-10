@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Media\Modify;
+namespace App\Media\ImgFilter;
 
 use Intervention\Image\Facades\Image;
+use App\Media\Util\EnsureDirForFile;
 
-class ResizeFilter implements FilterInterface
+class CropFilter implements FilterInterface
 {
 
     protected $width;
@@ -18,7 +19,8 @@ class ResizeFilter implements FilterInterface
 
     public function __invoke($input, $output)
     {
-        Image::make($input)->resize($this->width, $this->height)->save($output);
+        EnsureDirForFile::invoke($output);
+        Image::make($input)->fit($this->width, $this->height)->save($output);
     }
 
 }

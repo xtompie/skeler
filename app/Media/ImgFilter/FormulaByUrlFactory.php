@@ -1,36 +1,35 @@
 <?php
 
-namespace App\Media\Modify;
+namespace App\Media\ImgFilter;
 
-class FormulaByOutputFactory
+class FormulaByUrlFactory
 {
 
     /**
-     * Creates formula for output
+     * Creates formula for url
      *
-     * @param string $path Output path
+     * @param string $url Url path
      * @return Formula|null
      */
-    public static function invoke($output)
+    public static function invoke($url)
     {
-        $parts = FormulaMatcher::invoke($output, [
-            FormulaMatcher::OUTPUT_PREFIX,
+        $parts = FormulaMatcher::invoke($url, [
+            FormulaMatcher::URL_PREFIX,
             FormulaMatcher::MAIN,
             FormulaMatcher::FILTER,
             FormulaMatcher::EXT,
         ]);
 
         if (!$parts) {
-            null;
+            return null;
         }
 
-        return new static(
+        return new Formula(
             "{$parts->inputPrefix()}/{$parts->main()}.{$parts->ext()}",
             "{$parts->outputPrefix()}/{$parts->main()}_{$parts->filter()}.{$parts->ext()}",
             $parts->filter(),
             "{$parts->urlPrefix()}/{$parts->main()}_{$parts->filter()}.{$parts->ext()}"
         );
     }
-
 
 }

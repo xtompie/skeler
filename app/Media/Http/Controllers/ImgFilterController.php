@@ -2,11 +2,11 @@
 
 namespace App\Media\Http\Controllers;
 
-use App\Media\Modify\UrlService;
+use App\Media\ImgFilter\UrlService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
-class ModifyController extends Controller
+class ImgFilterController extends Controller
 {
 
     public function __invoke(Request $request)
