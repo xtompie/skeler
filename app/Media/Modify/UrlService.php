@@ -24,7 +24,7 @@ class UrlService
      */
     public function __invoke($url)
     {
-        $formula = (new FormulaFactory)->forUrl($url);
+        $formula = FormulaByUrlFactory::invoke($url);
 
         if (!$formula) {
             return null;
