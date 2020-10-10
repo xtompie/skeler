@@ -6,18 +6,7 @@ class UrlService
 {
 
     /**
-     *  Url process
-     *
-     * @param string $url
-     * @return Formula|null
-     */
-    public static function invoke($url)
-    {
-        return (new static)->__invoke($url);
-    }
-
-    /**
-     *  Url process
+     *  Generates filtered img
      *
      * @param string $url
      * @return Formula|null
