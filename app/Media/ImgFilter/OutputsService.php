@@ -20,8 +20,11 @@ class OutputsService
             })
             ->filter()
             ->map(function(Formula $formula) {
-                return storage_path($formula->output());
+                return $formula->output();
             })
+            // ->map(function($output) {
+            //     return storage_path($output);
+            // })
             ->toArray()
         ;
 
