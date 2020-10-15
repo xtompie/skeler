@@ -9,7 +9,7 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
 });
 
 Route::prefix('admin')->group(function () {
-    Route::get('login', \App\Admin\Http\Controller\Admin\LoginController::class)->name('admin.login');
+    Route::match(['get', 'post'], 'login', \App\Admin\Http\Controller\Admin\LoginController::class)->name('admin.login');
     // Resource::each()->routeRegister();
 });
 
