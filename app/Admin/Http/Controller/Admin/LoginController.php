@@ -10,6 +10,10 @@ class LoginController extends Controller
 {
     public function __invoke(Request $request)
     {
+        if (Auth::guard('admin')->check()) {
+            return response()->redirectToRoute('admin.index');
+        }
+
         $credentials = $request->only('email', 'password');
         $error = false;
 
