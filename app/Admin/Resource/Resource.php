@@ -351,13 +351,13 @@ class Resource
 
     public function actions()
     {
-        if ($this->isContext('index') && !$this->hasId()) {
+        if ($this->isContext('index')) {
             return [
                 $this->actionCreate(),
             ];
         }
 
-        if ($this->hasId() && !$this->isContext('delete')) {
+        if (!$this->isContext('create') && !$this->isContext('delete')) {
             return [
                 $this->actionDetail(),
                 $this->actionUpdate(),
@@ -453,7 +453,7 @@ class Resource
         $result = [
             'models' => $models,
             'resources' => collect($models->items())->map(function($model) {
-                return $this->withModel($model)->withLoad();
+                return $this->withContext('list')->withModel($model)->withLoad();
             }),
         ];
 
@@ -581,7 +581,7 @@ class Resource
             'breadcrumb' => $this->breadcrumb(),
         ];
 
-        if (!$this->hasModel()) {
+        if ($this->isContext('index')) {
             return $main + [
                 'labels' => $this->resolveFields()->map(function(Field $field) {
                     return [

@@ -1,4 +1,4 @@
-@if ($context === 'index')
+@if ($context === 'list')
     <td>
         @if ($escape)
             {{ $value }}

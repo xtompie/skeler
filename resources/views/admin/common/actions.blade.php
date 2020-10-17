@@ -1,6 +1,6 @@
 @if ($actions)
 
-    @if ($context !== 'index' || !isset($id))
+    @if ($context !== 'list')
         <div class="row my-3">
             <div class="col">
     @endif
@@ -9,7 +9,7 @@
         <a
             class="
                 btn btn-outline-primary
-                <?= $context == 'index' && isset($id) ? 'btn-sm' : '' ?>
+                <?= $context == 'list' ? 'btn-sm' : '' ?>
             "
             href="{{ $action['url'] }}"
         >
@@ -17,7 +17,7 @@
         </a>
     @endforeach
 
-    @if ($context !== 'index' || !isset($id))
+    @if ($context !== 'list')
             </div>
         </div>
     @endif

@@ -148,15 +148,19 @@ class Field
     public function enableOn($contexts = [])
     {
         if (func_num_args() == 0) {
-            return $this->enableOn ?: $this->enableDefault();
+            $enableOn = $this->enableOn ?: $this->enableDefault();
+            if (in_array('list', $enableOn)) {
+                $enableOn = collect($enableOn)->add('index')->unique()->toArray();
+            }
+            return $enableOn;
         }
         $this->enableOn = is_string($contexts) ? explode('|', $contexts) : $contexts;
         return $this;
     }
 
-    public function enableOnIndex()
+    public function enableOnList()
     {
-        $this->enableOn(collect($this->enableOn())->add('index')->unique()->toArray());
+        $this->enableOn(collect($this->enableOn())->add('list')->unique()->toArray());
         return $this;
     }
 

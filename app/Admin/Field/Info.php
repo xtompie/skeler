@@ -14,7 +14,7 @@ class Info extends Field
 
     public function enableDefault()
     {
-        return ['index', 'detail'];
+        return ['list', 'detail'];
     }
 
     /**

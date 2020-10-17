@@ -20,7 +20,7 @@ class Page extends Resource
     {
         return [
             ID::make(),
-            Text::make()->name('title')->label('Title')->rules('min:2')->enableOnIndex()->sortable(true),
+            Text::make()->name('title')->label('Title')->rules('min:2')->enableOnList()->sortable(true),
             Info::make()->label('Info')->loadUsing(function(Info $field) {
                 return strtoupper(substr($field->model()->title, 0, 10));
             }),
